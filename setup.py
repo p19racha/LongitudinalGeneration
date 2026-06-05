@@ -1,10 +1,10 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="peag",
+    name="pulse",
     version="2.0.0",
-    description="Patient-context Enhanced Longitudinal Multimodal Alignment and Generation Framework",
-    author="PEAG Team",
+    description="Patient Unified Longitudinal Signal Engine",
+    author="PULSE Team",
     packages=find_packages(),
     install_requires=[
         "torch>=1.9.0",

@@ -1,6 +1,6 @@
-﻿# Benchmarking Single-Cell Multimodal Frameworks and PEAG on Clinical Two-Visit Imputation
+﻿# Benchmarking Single-Cell Multimodal Frameworks and PULSE on Clinical Two-Visit Imputation
 
-This folder benchmarks `MIDAS`, `scVAEIT`, `StabMap`, and `PEAG` on the same
+This folder benchmarks `MIDAS`, `scVAEIT`, `StabMap`, and `PULSE` on the same
 clinical metabolomics-imputation task.
 
 ## Benchmark Goal
@@ -11,11 +11,11 @@ Modality A (routine labs), under patient-level train/test separation.
 - Input to all methods at evaluation: held-out patient `visit=1` Modality A.
 - Reconstruction target for all methods: the same held-out patient `visit=1`
   Modality B.
-- Additional context used only by PEAG: the same patient's `visit=0` profile
+- Additional context used only by PULSE: the same patient's `visit=0` profile
   to form historical state.
 
 This design keeps the reconstructed object identical across methods while
-isolating PEAG's longitudinal conditioning capability.
+isolating PULSE's longitudinal conditioning capability.
 
 ## Fairness Protocol
 
@@ -25,7 +25,7 @@ All methods use the exact same patient-level split.
 - For static single-cell baselines (`MIDAS`, `scVAEIT`, `StabMap`): each visit
   from training patients is treated as an independent paired sample `(A, B)`.
 - Static baselines do not use historical-state variables.
-- For PEAG: training uses longitudinal sequences; evaluation uses `visit=0` as
+- For PULSE: training uses longitudinal sequences; evaluation uses `visit=0` as
   historical context and imputes `visit=1` Modality B.
 
 ## Input CSV Format
@@ -81,7 +81,7 @@ Prepared matrices and scaler stats are exported under each method's
 - Adaptation: shared Modality A anchors transfer in the shared embedding.
 - Inference: transfer/impute follow-up Modality B via reference-query mapping.
 
-### PEAG (longitudinal model)
+### PULSE (longitudinal model)
 
 - Input structure: per-patient two-visit sequence.
 - Training: active modality masking with longitudinal conditioning.
@@ -117,8 +117,8 @@ git clone https://github.com/MarioniLab/StabMap.git baseline-model/StabMap
   Run scVAEIT adaptation.
 - `run_stabmap_from_csv.py`
   Run StabMap adaptation.
-- `run_peag.py`
-  Run PEAG with longitudinal historical-state conditioning.
+- `run_pulse.py`
+  Run PULSE with longitudinal historical-state conditioning.
 
 ## Example Commands
 
@@ -147,9 +147,9 @@ python scripts/Benchmark-single-cell-Method/run_stabmap_from_csv.py \
 ```
 
 ```bash
-python scripts/Benchmark-single-cell-Method/run_peag.py \
+python scripts/Benchmark-single-cell-Method/run_pulse.py \
   --csv data/clinical_two_visit.csv \
-  --output-dir scripts/Benchmark-single-cell-Method/outputs/peag \
+  --output-dir scripts/Benchmark-single-cell-Method/outputs/pulse \
   --train-ratio 0.7 \
   --split-seed 0 \
   --train-mask-rate 0.6

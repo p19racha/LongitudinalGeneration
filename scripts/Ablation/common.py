@@ -17,15 +17,15 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from peag import (  # noqa: E402
-    PEAGModel,
+from pulse import (  # noqa: E402
+    PulseModel,
     evaluate_reconstruction,
     parse_column_argument,
     prepare_two_visit_clinical_benchmark,
     save_json,
 )
-from peag.data.dataset import LongitudinalDataset, collate_visits  # noqa: E402
-from peag.training.trainer import Trainer  # noqa: E402
+from pulse.data.dataset import LongitudinalDataset, collate_visits  # noqa: E402
+from pulse.training.trainer import Trainer  # noqa: E402
 
 
 def add_common_experiment_args(parser) -> None:
@@ -143,7 +143,7 @@ def build_bundle_from_args(args):
     )
 
 
-def build_model_from_args(args, bundle, **overrides: Any) -> PEAGModel:
+def build_model_from_args(args, bundle, **overrides: Any) -> PulseModel:
     lab_dim = len(bundle.lab_columns)
     metab_dim = len(bundle.metab_columns)
     model_kwargs = {
@@ -163,7 +163,7 @@ def build_model_from_args(args, bundle, **overrides: Any) -> PEAGModel:
         "adversarial_grl_lambda": 1.0,
     }
     model_kwargs.update(overrides)
-    return PEAGModel(**model_kwargs).to(args.device)
+    return PulseModel(**model_kwargs).to(args.device)
 
 
 def train_model(bundle, args, experiment_dir: Path, **model_overrides: Any):
@@ -277,7 +277,7 @@ def _to_tensor_visit(visit: dict[str, np.ndarray | None], device: str) -> dict[s
 
 
 def _evaluate_followup_imputation_on_split(
-    model: PEAGModel,
+    model: PulseModel,
     *,
     visits: Sequence[Sequence[dict[str, np.ndarray | None]]],
     masks: Sequence[Sequence[dict[str, int]]],
@@ -329,7 +329,7 @@ def _evaluate_followup_imputation_on_split(
 
 
 def evaluate_followup_imputation(
-    model: PEAGModel,
+    model: PulseModel,
     bundle,
     *,
     device: str,

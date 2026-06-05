@@ -15,7 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from peag.clinical_benchmark import parse_column_argument, prepare_two_visit_clinical_benchmark  # noqa: E402
+from pulse.clinical_benchmark import parse_column_argument, prepare_two_visit_clinical_benchmark  # noqa: E402
 
 
 @dataclass

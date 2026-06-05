@@ -1,7 +1,7 @@
 # EHR Modeling Benchmarks
 
 This folder contains the clinical patient-representation benchmarks used to
-position PEAG against representative EHR / trajectory-modeling paradigms on the
+position PULSE against representative EHR / trajectory-modeling paradigms on the
 proteomics generation task.
 
 In this benchmark setting:
@@ -12,11 +12,11 @@ In this benchmark setting:
 
 The folder currently includes executable benchmarks for:
 
-- `peag_benchmark.py`: PEAG with history representation + current labs
+- `pulse_benchmark.py`: PULSE with history representation + current labs
 - `transformer_benchmark.py`: a standard Transformer encoder baseline
 - `llama31_benchmark.py`: an LLM-embedding baseline based on Llama 3.1
 
-The manuscript discussion also positions PEAG relative to trajectory-modeling
+The manuscript discussion also positions PULSE relative to trajectory-modeling
 paradigms such as Delphi. If an implementation is not present in this folder,
 it should be considered discussed in the paper rather than released here as a
 reproducible script.
@@ -37,8 +37,8 @@ reproducible script.
   patient summaries, obtains frozen Llama 3.1 embeddings, and trains a small
   decoder to predict proteomics.
 
-- `peag_benchmark.py`
-  Uses the same clinical inputs, but models them with the PEAG
+- `pulse_benchmark.py`
+  Uses the same clinical inputs, but models them with the PULSE
   alignment-generation framework to leverage longitudinal context and
   cross-modal structure.
 
@@ -135,36 +135,36 @@ CUDA_VISIBLE_DEVICES=0 python scripts/Bencmark-EHR-Modeling/llama31_benchmark.py
 If 24 GB is still tight, add `--llama_load_in_8bit`. For the smallest memory
 footprint on CUDA, add `--llama_load_in_4bit` instead.
 
-### PEAG benchmark
+### PULSE benchmark
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python scripts/Bencmark-EHR-Modeling/peag_benchmark.py \
+CUDA_VISIBLE_DEVICES=0 python scripts/Bencmark-EHR-Modeling/pulse_benchmark.py \
   --device cuda:0 \
   --train_path data/proteomics_train.jsonl \
   --valid_path data/proteomics_valid.jsonl \
   --test_path data/proteomics_test.jsonl \
-  --save_dir scripts/Bencmark-EHR-Modeling/outputs/peag_benchmark \
+  --save_dir scripts/Bencmark-EHR-Modeling/outputs/pulse_benchmark \
   --llama_model_name_or_path meta-llama/Llama-3.1-8B \
-  --cache_dir scripts/Bencmark-EHR-Modeling/outputs/peag_cache
+  --cache_dir scripts/Bencmark-EHR-Modeling/outputs/pulse_cache
 ```
 
-The same Llama loading flags are available in `peag_benchmark.py` because PEAG
+The same Llama loading flags are available in `pulse_benchmark.py` because PULSE
 also relies on frozen Llama history embeddings. A 24 GB GPU-friendly launch
 looks like:
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python scripts/Bencmark-EHR-Modeling/peag_benchmark.py \
+CUDA_VISIBLE_DEVICES=0 python scripts/Bencmark-EHR-Modeling/pulse_benchmark.py \
   --device cuda:0 \
   --train_path data/proteomics_train.jsonl \
   --valid_path data/proteomics_valid.jsonl \
   --test_path data/proteomics_test.jsonl \
-  --save_dir scripts/Bencmark-EHR-Modeling/outputs/peag_benchmark \
+  --save_dir scripts/Bencmark-EHR-Modeling/outputs/pulse_benchmark \
   --llama_model_name_or_path meta-llama/Llama-3.1-8B \
   --llama_device cuda:0 \
   --llama_dtype float16 \
   --embedding_batch_size 1 \
   --max_length 512 \
-  --cache_dir scripts/Bencmark-EHR-Modeling/outputs/peag_cache
+  --cache_dir scripts/Bencmark-EHR-Modeling/outputs/pulse_cache
 ```
 
 ## Outputs
@@ -187,7 +187,7 @@ performance summaries such as:
 ## Dependencies
 
 - `transformer_benchmark.py` depends on the repository's standard PyTorch / NumPy stack
-- `llama31_benchmark.py` and `peag_benchmark.py` additionally require
+- `llama31_benchmark.py` and `pulse_benchmark.py` additionally require
   `transformers` and access to a Llama 3.1 checkpoint
 - for CUDA 8-bit / 4-bit loading, install `bitsandbytes`
 
@@ -196,6 +196,6 @@ performance summaries such as:
 This folder is for the paper's EHR / clinical representation benchmarks on the
 proteomics generation task. It is separate from:
 
-- `scripts/Ablation/` for PEAG ablations on two-visit metabolomics imputation
+- `scripts/Ablation/` for PULSE ablations on two-visit metabolomics imputation
 - `scripts/Benchmark-single-cell-Method/` for adapted static single-cell
   baselines on the same metabolomics imputation task

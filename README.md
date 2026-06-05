@@ -1,6 +1,6 @@
-# PEAG
+# PULSE
 
-Patient-context Enhanced Longitudinal Multimodal Alignment and Generation for
+Patient Unified Longitudinal Signal Engine for
 longitudinal multimodal clinical data with missing visits and modalities.
 
 ## Installation
@@ -25,14 +25,14 @@ Benchmark-specific dependencies are documented in each benchmark folder README.
 import torch
 from torch.utils.data import DataLoader
 
-from peag.data.dataset import LongitudinalDataset, collate_visits, create_synthetic_data
-from peag.model import PEAGModel
-from peag.training.trainer import Trainer
+from pulse.data.dataset import LongitudinalDataset, collate_visits, create_synthetic_data
+from pulse.model import PulseModel
+from pulse.training.trainer import Trainer
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 modality_dims = {"modality_a": 61, "modality_b": 251}
-model = PEAGModel(
+model = PulseModel(
     modality_dims=modality_dims,
     latent_dim=16,
     hidden_dim=32,
@@ -59,13 +59,13 @@ history = trainer.train(dataloader, n_epochs=50)
 ```
 
 <p align="center">
-  <img src="docs/peag_missing_imputation_diagram.svg" alt="PEAG input-output demo" width="1200">
+  <img src="docs/pulse_missing_imputation_diagram.svg" alt="PULSE input-output demo" width="1200">
 </p>
 
 ## Paper-to-Code Mapping (Reproducibility)
 
 - `scripts/Ablation/`
-  PEAG ablations on the two-visit metabolomics imputation task:
+  PULSE ablations on the two-visit metabolomics imputation task:
   - historical-state ablation: `scripts/Ablation/run_metabolomics_ablations.py`
   - alignment variants (stop-gradient, point-wise): `scripts/Ablation/run_metabolomics_ablations.py`
   - loss ablations (remove `L_align`, remove `L_adv`): `scripts/Ablation/run_metabolomics_ablations.py`
@@ -75,18 +75,18 @@ history = trainer.train(dataloader, n_epochs=50)
   - MIDAS: `scripts/Benchmark-single-cell-Method/run_midas.py`
   - scVAEIT: `scripts/Benchmark-single-cell-Method/run_scvaeit.py`
   - StabMap: `scripts/Benchmark-single-cell-Method/run_stabmap_from_csv.py`
-  - PEAG: `scripts/Benchmark-single-cell-Method/run_peag.py`
+  - PULSE: `scripts/Benchmark-single-cell-Method/run_pulse.py`
 - `scripts/Bencmark-EHR-Modeling/`
   Four models for EHR/proteomics-generation:
-  - PEAG: `scripts/Bencmark-EHR-Modeling/peag_benchmark.py`
+  - PULSE: `scripts/Bencmark-EHR-Modeling/pulse_benchmark.py`
   - Transformer: `scripts/Bencmark-EHR-Modeling/transformer_benchmark.py`
   - Llama 3.1: `scripts/Bencmark-EHR-Modeling/llama31_benchmark.py`
-- `scripts/PEAG_MIMIC/`
+- `scripts/PULSE_MIMIC/`
   Four models for MIMIC-III:
-  - note-only Llama: `scripts/PEAG_MIMIC/run_notes_only.py`
-  - lab-only Transformer: `scripts/PEAG_MIMIC/run_lab_transformer.py`
-  - late-fusion (Llama + labs): `scripts/PEAG_MIMIC/run_simply_combined.py`
-  - PEAG: `scripts/PEAG_MIMIC/run_peag.py`
+  - note-only Llama: `scripts/PULSE_MIMIC/run_notes_only.py`
+  - lab-only Transformer: `scripts/PULSE_MIMIC/run_lab_transformer.py`
+  - late-fusion (Llama + labs): `scripts/PULSE_MIMIC/run_simply_combined.py`
+  - PULSE: `scripts/PULSE_MIMIC/run_pulse.py`
 
 ## Recommended Data Format for Your Specific Task
 
@@ -134,7 +134,7 @@ CUDA_VISIBLE_DEVICES=0 python scripts/inference.py --device cuda:0 --checkpoint 
 
 ## Framework Summary
 
-For visit `N`, PEAG:
+For visit `N`, PULSE:
 
 1. Encodes only the currently available modalities.
 2. Builds the historical state with a temporal autoregressive module.
@@ -158,13 +158,13 @@ The autoregressive component is not restricted to an RNN formulation.
 - `temporal_model="transformer"` uses causal self-attention over previous visit
   states and is better suited to longer visit sequences.
 
-Both options plug into the same PEAG fusion and decoding pipeline.
+Both options plug into the same PULSE fusion and decoding pipeline.
 
 ## API Summary
 
 | Component                                                                                  | Description                                                |
 | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
-| `PEAGModel(..., temporal_model="recurrent")`                                             | Main model with recurrent or transformer temporal dynamics |
+| `PulseModel(..., temporal_model="recurrent")`                                             | Main model with recurrent or transformer temporal dynamics |
 | `model.forward(visits_data, missing_masks, kl_annealing_weight=1.0, recon_targets=None)` | Returns `reconstructions` and `losses`                 |
 | `model.impute_missing(visits_data, missing_masks)`                                       | Returns per-visit imputations                              |
 | `LongitudinalDataset(..., train_mask_rate=0.6)`                                          | Dataset with single-modality active masking                |

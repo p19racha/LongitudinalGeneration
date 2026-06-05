@@ -10,11 +10,11 @@ from common import (
     save_experiment_metadata,
     train_model,
 )
-from peag import save_json
+from pulse import save_json
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run PEAG metabolomics-imputation ablations from a two-visit CSV.")
+    parser = argparse.ArgumentParser(description="Run PULSE metabolomics-imputation ablations from a two-visit CSV.")
     add_common_experiment_args(parser)
     return parser.parse_args()
 

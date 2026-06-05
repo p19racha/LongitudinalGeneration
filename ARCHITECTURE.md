@@ -1,8 +1,8 @@
-# PEAG Architecture
+# PULSE Architecture
 
 ## Overview
 
-PEAG processes longitudinal multimodal visits in temporal order:
+PULSE processes longitudinal multimodal visits in temporal order:
 
 1. encode the currently available modalities at visit `N`
 2. summarize previous visit states into a historical state `Z_P`
@@ -35,7 +35,7 @@ modalities are not double-counted.
 
 The revised training strategy uses single-modality active masking:
 
-- at each visit, PEAG samples whether to actively mask with probability `0.6`
+- at each visit, PULSE samples whether to actively mask with probability `0.6`
 - if masking is triggered, exactly one currently observed modality is selected
   and relabeled from `0` to `1`
 - naturally missing modalities stay `2`
@@ -46,7 +46,7 @@ current modality information together with the historical state.
 
 ## Temporal Autoregressive Module
 
-The autoregressive component of PEAG is modular rather than fixed to an RNN.
+The autoregressive component of PULSE is modular rather than fixed to an RNN.
 
 ### Recurrent option
 
@@ -57,7 +57,7 @@ The autoregressive component of PEAG is modular rather than fixed to an RNN.
 
 - uses causal self-attention over previous visit states
 - better suited to longer longitudinal visit sequences
-- implemented as a lightweight temporal encoder, not a full redesign of PEAG
+- implemented as a lightweight temporal encoder, not a full redesign of PULSE
 
 In both cases, the module outputs the historical state consumed by the
 Past-State encoder at the next visit.
@@ -93,8 +93,8 @@ for each visit N:
 ## Module Layout
 
 ```text
-peag/
-  model.py              # main PEAG model
+pulse/
+  model.py              # main PULSE model
   losses.py             # reconstruction, KL, adversarial, total loss
   core/
     encoders.py         # modality encoders + past-state encoder

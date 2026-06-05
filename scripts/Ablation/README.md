@@ -1,6 +1,6 @@
-﻿# PEAG Ablation Scripts
+﻿# PULSE Ablation Scripts
 
-This folder contains PEAG ablation code for the two-visit metabolomics-imputation task.
+This folder contains PULSE ablation code for the two-visit metabolomics-imputation task.
 
 ## Expected CSV Format
 
@@ -16,7 +16,7 @@ Columns can be passed explicitly or inferred by prefix. If no explicit mapping i
 ## Scripts
 
 - `run_metabolomics_ablations.py`
-  Runs the main PEAG ablations:
+  Runs the main PULSE ablations:
   - default model
   - historical-state ablation at inference
   - directional stop-gradient alignment

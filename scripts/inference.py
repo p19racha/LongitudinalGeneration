@@ -3,16 +3,16 @@ from typing import Dict, List, Optional
 
 import torch
 
-from peag.model import PEAGModel
+from pulse.model import PulseModel
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Inference script for PEAG model.")
+    parser = argparse.ArgumentParser(description="Inference script for PULSE model.")
     parser.add_argument(
         "--checkpoint",
         type=str,
         required=True,
-        help="Path to a trained PEAG model checkpoint.",
+        help="Path to a trained PULSE model checkpoint.",
     )
     parser.add_argument(
         "--temporal_model",
@@ -76,7 +76,7 @@ def main() -> None:
         model_config["temporal_model"] = args.temporal_model
 
     modality_dims = model_config["modality_dims"]
-    model = PEAGModel(**model_config)
+    model = PulseModel(**model_config)
     model.to(device)
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()

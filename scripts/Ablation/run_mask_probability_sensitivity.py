@@ -10,11 +10,11 @@ from common import (
     save_experiment_metadata,
     train_model,
 )
-from peag import format_mask_rate_tag, save_json
+from pulse import format_mask_rate_tag, save_json
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Scan active-masking probabilities for PEAG metabolomics imputation.")
+    parser = argparse.ArgumentParser(description="Scan active-masking probabilities for PULSE metabolomics imputation.")
     add_common_experiment_args(parser)
     parser.add_argument(
         "--mask-rates",

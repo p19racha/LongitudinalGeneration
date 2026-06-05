@@ -3,14 +3,14 @@ import argparse
 import torch
 from torch.utils.data import DataLoader
 
-from peag.data.dataset import LongitudinalDataset, create_synthetic_data, collate_visits
-from peag.model import PEAGModel
-from peag.training.trainer import Trainer
+from pulse.data.dataset import LongitudinalDataset, create_synthetic_data, collate_visits
+from pulse.model import PulseModel
+from pulse.training.trainer import Trainer
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Train PEAG with single-modality active masking and configurable temporal modeling."
+        description="Train PULSE with single-modality active masking and configurable temporal modeling."
     )
     parser.add_argument("--n_patients", type=int, default=100, help="Number of synthetic patients.")
     parser.add_argument("--n_visits", type=int, default=3, help="Number of visits per patient.")
@@ -121,7 +121,7 @@ def main() -> None:
         pin_memory=args.device.startswith("cuda"),
     )
 
-    model = PEAGModel(
+    model = PulseModel(
         modality_dims=modality_dims,
         latent_dim=16,
         hidden_dim=128,
