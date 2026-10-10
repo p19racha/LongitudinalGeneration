@@ -92,6 +92,18 @@ def execute_pulse_synthesis(
         if v.latent_state:
             latent_count += 1
 
+    from server.services.audit_logger import record_audit_event
+    record_audit_event(
+        action="PULSE_SYNTHESIS_EXECUTION",
+        patient_id=patient.id,
+        mrn=patient.mrn,
+        details={
+            "synthesized_measurements": synth_count,
+            "latent_states": latent_count,
+            "predictions": pred_count,
+        },
+    )
+
     return RunPulseResponse(
         message="PULSE synthesis and risk assessment successfully executed.",
         patient=updated_patient,

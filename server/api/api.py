@@ -8,6 +8,7 @@ from server.api.routes import (
     visits_router,
     pulse_router,
     reports_router,
+    exports_router,
 )
 
 api_router = APIRouter()
@@ -17,3 +18,4 @@ api_router.include_router(patients_router)
 api_router.include_router(visits_router)
 api_router.include_router(pulse_router)
 api_router.include_router(reports_router)
+api_router.include_router(exports_router)

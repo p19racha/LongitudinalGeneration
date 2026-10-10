@@ -153,6 +153,41 @@ export function PatientDetailView({
               <span>Clinical Dossier</span>
             </Button>
 
+            {/* Export CSV */}
+            <Button
+              variant="outline"
+              onClick={() => {
+                window.open(`http://localhost:8000/api/patients/${patient.id}/export/csv`, "_blank");
+              }}
+              className="text-xs font-semibold text-slate-700 border-slate-300 hover:bg-slate-50 gap-1.5"
+              title="Download Longitudinal Measurements as CSV"
+            >
+              <span>Export CSV</span>
+            </Button>
+
+            {/* Export FHIR */}
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  const fhir = await (await fetch(`http://localhost:8000/api/patients/${patient.id}/export/fhir`)).json();
+                  const blob = new Blob([JSON.stringify(fhir, null, 2)], { type: "application/json" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `${patient.mrn}_fhir_bundle.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                } catch (e) {
+                  alert("Export failed.");
+                }
+              }}
+              className="text-xs font-semibold text-slate-700 border-slate-300 hover:bg-slate-50 gap-1.5"
+              title="Export as HL7 FHIR R4 Bundle"
+            >
+              <span>FHIR JSON</span>
+            </Button>
+
             {/* Delete Patient */}
             <Button
               variant="ghost"
@@ -165,6 +200,19 @@ export function PatientDetailView({
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
+        </div>
+
+        {/* SaMD Safety Notice Banner */}
+        <div className="mt-4 p-3 bg-amber-50/80 border border-amber-200/80 rounded-xl flex items-center justify-between text-xs text-amber-900">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-amber-600 shrink-0" />
+            <span>
+              <strong>Investigational SaMD Notice:</strong> PULSE reconstructions and risk scorecards are generative statistical aids for clinical personnel and must be verified against direct confirmatory laboratory testing.
+            </span>
+          </div>
+          <span className="font-mono text-[10px] text-amber-700 uppercase font-bold shrink-0 ml-2">
+            21 CFR Part 11 Audit Active
+          </span>
         </div>
 
         {/* Navigation Tabs Bar */}

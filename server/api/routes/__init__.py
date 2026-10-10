@@ -4,6 +4,7 @@ from server.api.routes.patients import router as patients_router
 from server.api.routes.visits import router as visits_router
 from server.api.routes.pulse import router as pulse_router
 from server.api.routes.reports import router as reports_router
+from server.api.routes.exports import router as exports_router
 
 __all__ = [
     "features_router",
@@ -11,4 +12,5 @@ __all__ = [
     "visits_router",
     "pulse_router",
     "reports_router",
+    "exports_router",
 ]

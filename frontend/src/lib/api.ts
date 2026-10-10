@@ -53,14 +53,16 @@ export const api = {
     request<FeatureCatalog>("/api/features"),
 
   // Patients
-  getPatients: (params?: { search?: string; cohort?: string; limit?: number; offset?: number }): Promise<Patient[]> => {
+  getPatients: async (params?: { search?: string; cohort?: string; limit?: number; offset?: number }): Promise<Patient[]> => {
     const query = new URLSearchParams();
     if (params?.search) query.set("search", params.search);
     if (params?.cohort) query.set("cohort", params.cohort);
     if (params?.limit) query.set("limit", params.limit.toString());
     if (params?.offset) query.set("offset", params.offset.toString());
     const qs = query.toString();
-    return request<Patient[]>(`/api/patients${qs ? `?${qs}` : ""}`);
+    const data = await request<{ items?: Patient[] } | Patient[]>(`/api/patients${qs ? `?${qs}` : ""}`);
+    if (Array.isArray(data)) return data;
+    return data.items || [];
   },
 
   getPatient: (patientId: string): Promise<Patient> =>
@@ -115,6 +117,13 @@ export const api = {
   // Clinical Report
   getReport: (patientId: string): Promise<ClinicalReport> =>
     request<ClinicalReport>(`/api/patients/${patientId}/report`),
+
+  // Exports
+  exportFhir: (patientId: string): Promise<any> =>
+    request<any>(`/api/patients/${patientId}/export/fhir`),
+
+  getExportCsvUrl: (patientId: string): string =>
+    `${API_BASE_URL}/api/patients/${patientId}/export/csv`,
 
   // Health
   checkHealth: (): Promise<{ status: string; service: string }> =>

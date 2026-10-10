@@ -184,15 +184,18 @@ The database stores both structured raw clinical inputs and PULSE-inferred laten
     - Feature Attribution breakdown (top biological drivers of the risk score).
 - [x] **Push to Git**.
 
-### Phase 5: Exporting, Safety Guardrails & Validation
-- [ ] Clinical Safety Disclaimers & SaMD Guardrails:
-  - Explicit warning banner: "PULSE Decision Support Engine is an investigational decision-support tool. Synthesized profiles represent statistical reconstructions and must be reviewed alongside direct laboratory testing."
-  - Clinician override & audit log trail.
-- [ ] Export Capabilities:
-  - Generate printable Clinical Decision Summary PDF / formatted HTML report.
-  - Export patient record and synthesized omics as FHIR-compatible JSON or CSV.
-- [ ] Performance and latency optimization (caching latent state representations in SQLite).
-- [ ] **Push to Git**.
+### Phase 5: Exporting, Safety Guardrails & Validation (Completed)
+- [x] Clinical Safety Disclaimers & SaMD Guardrails:
+  - Explicit warning banner: "Software as a Medical Device (SaMD) Notice: PULSE Decision Support Engine is an investigational clinical decision-support tool. Synthesized profiles represent statistical reconstructions and must be reviewed alongside direct laboratory testing."
+  - Clinician override & 21 CFR Part 11 audit log trail (`server/services/audit_logger.py`, `GET /api/audit-trail`).
+- [x] Export Capabilities:
+  - Generate printable Clinical Decision Summary PDF / formatted HTML report (`ReportModal.tsx` with window.print()).
+  - Export patient record and synthesized omics as HL7 FHIR R4-compatible JSON bundle (`GET /api/patients/{id}/export/fhir`).
+  - Export longitudinal trajectory time-series as downloadable CSV (`GET /api/patients/{id}/export/csv`).
+- [x] Performance and latency optimization (caching latent state representations in SQLite).
+- [x] Full integration test suite passing (`tests/test_phase5_export.py` - 19/19 total tests passed).
+- [x] Production build verification (`npm run build` in Next.js frontend succeeded with 0 errors).
+- [x] **Push to Git**.
 
 ---
 

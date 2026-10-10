@@ -158,6 +158,30 @@ class Measurement(Base):
 
     visit: Mapped[Visit] = relationship("Visit", back_populates="measurements")
 
+    @property
+    def value(self) -> float:
+        return self.feature_value
+
+    @property
+    def feature_category(self) -> str:
+        return self.modality
+
+    @property
+    def ref_low(self) -> Optional[float]:
+        return self.reference_low
+
+    @property
+    def ref_high(self) -> Optional[float]:
+        return self.reference_high
+
+    @property
+    def confidence_interval_low(self) -> Optional[float]:
+        return self.confidence_lower
+
+    @property
+    def confidence_interval_high(self) -> Optional[float]:
+        return self.confidence_upper
+
     def __repr__(self) -> str:
         status = "SYNTHETIC" if self.is_synthetic else "MEASURED"
         return f"<Measurement({self.feature_name}={self.feature_value} {self.unit} [{status}])>"

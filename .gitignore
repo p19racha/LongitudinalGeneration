@@ -18,10 +18,12 @@ node_modules/
 .next/
 out/
 
-# Database files
+# Database & local data
 *.db
 *.sqlite
 *.sqlite3
+data/
+*.jsonl
 
 # OS files
 .DS_Store
