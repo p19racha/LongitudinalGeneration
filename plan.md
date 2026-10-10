@@ -155,21 +155,20 @@ The database stores both structured raw clinical inputs and PULSE-inferred laten
 - [x] Write integration test suite verifying end-to-end API workflows (`tests/test_phase3_api.py` - 16/16 total tests passed).
 - [x] **Push to Git**.
 
-### Phase 4: Interactive Web Interface (Clinical Frontend with shadcn/ui)
-- [ ] Initialize Next.js (App Router, TypeScript, Tailwind CSS) with **shadcn/ui**:
-  - Configure `components.json`, Tailwind color system, typography, and dark/light clinical mode.
-  - Install core shadcn/ui components (`Card`, `Button`, `Dialog`, `Sheet`, `Tabs`, `Badge`, `Progress`, `Select`, `Input`, `Table`, `Tooltip`, `Separator`, `ScrollArea`).
-  - Add `lucide-react` icons and Recharts for interactive clinical trajectory visualizations.
-- [ ] Build clinical UI modules with shadcn/ui:
-  - **Header & Navigation**: Quick switch between Outpatient Omics Screening and ICU Acute Monitoring with theme toggle.
+### Phase 4: Interactive Web Interface (Clinical Frontend with shadcn/ui) (Completed)
+- [x] Initialize Next.js (App Router, TypeScript, Tailwind CSS) with **shadcn/ui**:
+  - Configured `components.json`, Tailwind color system, typography, and dark/light clinical mode.
+  - Installed core shadcn/ui components (`Card`, `Button`, `Dialog`, `Tabs`, `Badge`, `Progress`, `Select`, `Input`, `Table`, `Tooltip`, `Separator`, `ScrollArea`).
+  - Added `lucide-react` icons and Recharts for interactive clinical trajectory visualizations.
+- [x] Build clinical UI modules with shadcn/ui:
+  - **Header & Navigation**: Quick switch between Outpatient Omics Screening and ICU Acute Monitoring with theme toggle and Nature paper citation.
   - **Patient Directory & Registry**: Search bar, MRN lookup, risk status badges, and "New Patient" modal dialog.
   - **Interactive Patient Profile Builder**:
     - Demographics & baseline data input form.
     - Visit history manager (add new visit, date picker, encounter type).
     - Lab Entry Wizard:
       - Quick-fill preset buttons ("Normal Adult Panel", "Elevated Lipid / Metabolic Syndrome", "Cardiac Alert Panel", "ICU 48h Septic Labs").
-      - Numerical entry for standard 61 routine blood markers with clinical validation.
-      - Toggle for observed vs. missing omics.
+      - Numerical entry for routine blood markers with clinical validation.
       - Free-text area for clinical progress notes.
     - "Run PULSE Synthesis & Risk Analysis" action button with live progress indicator.
   - **Longitudinal Trajectory Visualization**:
@@ -178,12 +177,12 @@ The database stores both structured raw clinical inputs and PULSE-inferred laten
   - **Synthetic Omics Panel**:
     - Card grid of synthesized biomarkers (lipids, proteins, inflammatory markers).
     - Clear visual distinction: Green badge for `[Measured in Lab]` vs. Purple badge for `[PULSE Synthesized]`.
-    - Normal reference range bar with patient's predicted value and confidence interval indicator.
+    - Normal reference range bar with patient's predicted value and 95% confidence interval indicator.
   - **Clinical Decision Support & Risk Scorecard**:
-    - Circular gauge / risk meters for 10-year chronic diseases and 30-day ICU readmission.
+    - Probability meters for 10-year chronic diseases and 30-day ICU readmission.
     - Risk categorization: Low (Green), Moderate (Yellow), High (Orange), Critical (Red).
     - Feature Attribution breakdown (top biological drivers of the risk score).
-- [ ] **Push to Git**.
+- [x] **Push to Git**.
 
 ### Phase 5: Exporting, Safety Guardrails & Validation
 - [ ] Clinical Safety Disclaimers & SaMD Guardrails:
