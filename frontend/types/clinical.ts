@@ -231,3 +231,27 @@ export interface SimulationResponse {
   risk_comparisons: SimulationComparison[];
   simulated_measurements_sample: Record<string, number>;
 }
+
+export interface SBARReport {
+  patient_id: string;
+  mrn: string;
+  full_name: string;
+  cohort_type: string;
+  situation: string;
+  background: string;
+  assessment: string;
+  recommendation: string;
+  generated_at: string;
+}
+
+export interface CopilotQueryRequest {
+  query: string;
+  include_sbar?: boolean;
+}
+
+export interface CopilotQueryResponse {
+  answer: string;
+  citations: string[];
+  sbar?: SBARReport | null;
+  suggested_followups: string[];
+}

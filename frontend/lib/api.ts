@@ -14,6 +14,9 @@ import {
   RunPulseResponse,
   TrajectoriesResponse,
   ClinicalReport,
+  SimulationResponse,
+  CopilotQueryResponse,
+  SBARReport,
 } from "@/types/clinical";
 
 const API_BASE_URL =
@@ -129,11 +132,25 @@ export const api = {
   simulateIntervention: (
     patientId: string,
     interventions: Record<string, number>
-  ): Promise<any> =>
-    request<any>(`/api/patients/${patientId}/simulate-intervention`, {
+  ): Promise<SimulationResponse> =>
+    request<SimulationResponse>(`/api/patients/${patientId}/simulate-intervention`, {
       method: "POST",
       body: JSON.stringify({ interventions }),
     }),
+
+  // Clinical AI Co-Pilot & SBAR Handover
+  queryCopilot: (
+    patientId: string,
+    query: string,
+    includeSbar: boolean = false
+  ): Promise<CopilotQueryResponse> =>
+    request<CopilotQueryResponse>(`/api/patients/${patientId}/copilot`, {
+      method: "POST",
+      body: JSON.stringify({ query, include_sbar: includeSbar }),
+    }),
+
+  getSBAR: (patientId: string): Promise<SBARReport> =>
+    request<SBARReport>(`/api/patients/${patientId}/sbar`),
 
   // Health
   checkHealth: (): Promise<{ status: string; service: string }> =>

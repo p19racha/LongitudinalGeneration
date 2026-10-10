@@ -15,6 +15,7 @@ import {
   User,
   Sliders,
   Download,
+  Bot,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +26,7 @@ import { SyntheticOmicsView } from "@/components/views/SyntheticOmicsView";
 import { TrajectoriesView } from "@/components/views/TrajectoriesView";
 import { TimelineNotesView } from "@/components/views/TimelineNotesView";
 import { DigitalTwinView } from "@/components/views/DigitalTwinView";
+import { ClinicalCopilotView } from "@/components/views/ClinicalCopilotView";
 import { AddVisitModal } from "@/components/AddVisitModal";
 import { ReportModal } from "@/components/ReportModal";
 
@@ -265,6 +267,14 @@ export function PatientDetailView({
             <Calendar className="h-4 w-4 text-indigo-600" />
             <span>Encounters & Notes ({visits.length})</span>
           </TabsTrigger>
+
+          <TabsTrigger
+            value="copilot"
+            className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-xs py-2 px-3 gap-1.5"
+          >
+            <Bot className="h-4 w-4 text-indigo-600" />
+            <span>Clinical AI Co-Pilot</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Tab Panels */}
@@ -297,6 +307,10 @@ export function PatientDetailView({
             patient={patient}
             onOpenAddVisit={() => setIsAddVisitOpen(true)}
           />
+        </TabsContent>
+
+        <TabsContent value="copilot" className="mt-0">
+          <ClinicalCopilotView patient={patient} />
         </TabsContent>
       </Tabs>
 

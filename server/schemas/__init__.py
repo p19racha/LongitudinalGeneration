@@ -11,6 +11,8 @@ from server.schemas.patient import (
     PatientDetailResponse,
 )
 
+from server.schemas.copilot import SBARReport, CopilotQueryRequest, CopilotQueryResponse
+
 __all__ = [
     "MeasurementBase",
     "MeasurementCreate",
@@ -30,4 +32,7 @@ __all__ = [
     "PatientUpdate",
     "PatientListItem",
     "PatientDetailResponse",
+    "SBARReport",
+    "CopilotQueryRequest",
+    "CopilotQueryResponse",
 ]
