@@ -115,22 +115,23 @@ The database stores both structured raw clinical inputs and PULSE-inferred laten
 - [x] Write automated tests validating schema constraints and CRUD operations (`tests/test_phase1_db.py` - 4/4 passed).
 - [x] **Push to Git**.
 
-### Phase 2: PULSE Engine Service & Adaptation Layer
-- [ ] Build `PulseInferenceService`:
-  - Wrap `pulse.model.PulseModel` for single-patient and batch inference.
-  - Implement tensor formatting between database measurement rows and PULSE tensor inputs (`visits_data`, `missing_masks`).
-  - Implement continuous standardization & inverse transformation scalers.
-- [ ] Build Outpatient Omics Generator:
-  - Synthesize **Metabolomics panel** (251 biomarkers, focusing on top clinically validated lipid ratios).
-  - Synthesize **Proteomics panel** (top pleiotropic and disease-predictive plasma proteins).
-- [ ] Build ICU Acute Care Engine:
-  - Process 4-hour step-level structured laboratory time series.
-  - Integrate note representation encoder for unstructured narrative steps.
-- [ ] Build Downstream Disease Risk Scoring Heads:
-  - 10-year chronic disease risk estimators (Dementia, Heart Failure, MI, Stroke, COPD, Diabetes).
+### Phase 2: PULSE Engine Service & Adaptation Layer (Completed)
+- [x] Build `PulseInferenceService` (`server/services/pulse_engine.py`):
+  - Wrapped `pulse.model.PulseModel` for single-patient and batch inference.
+  - Implemented tensor formatting between database measurement rows and PULSE tensor inputs (`visits_data`, `missing_masks`).
+  - Implemented continuous standardization & inverse transformation scalers based on clinical reference bounds.
+- [x] Build Outpatient Omics Generator:
+  - Synthesized **Metabolomics panel** (top lipid ratio biomarkers: large LDL free cholesterol ratio, TG/PG ratio, small VLDL-TG%, ApoB/ApoA1).
+  - Synthesized **Proteomics panel** (top disease-predictive plasma proteins: GFAP, NEFL/NfL, GDF15, NT-proBNP, hs-Troponin T, Cystatin C).
+- [x] Build ICU Acute Care Engine:
+  - Processed 4-hour step-level structured laboratory time series (Lactate, WBC, Platelets, Creatinine, MAP, PaO2/FiO2).
+  - Integrated note narrative text across temporal steps.
+- [x] Build Downstream Disease Risk Scoring Heads (`server/services/risk_models.py`):
+  - 10-year chronic disease risk estimators (Dementia, Heart Failure, MI, Stroke, Diabetes).
   - 30-day post-discharge ICU readmission and mortality scorecards.
-- [ ] Compute uncertainty confidence intervals for synthesized biomarkers.
-- [ ] **Push to Git**.
+- [x] Computed uncertainty 95% confidence intervals for synthesized biomarkers.
+- [x] Tested with automated test suite (`tests/test_phase2_engine.py` - 9/9 total tests passed).
+- [x] **Push to Git**.
 
 ### Phase 3: REST API Backend (FastAPI)
 - [ ] Implement robust FastAPI application structure:
