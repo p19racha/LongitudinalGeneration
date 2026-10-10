@@ -104,16 +104,16 @@ The database stores both structured raw clinical inputs and PULSE-inferred laten
 
 ## 3. Phased Implementation Roadmap
 
-### Phase 1: Core Database & Data Access Layer
-- [ ] Define SQLAlchemy database models (`Patient`, `Visit`, `Measurement`, `ClinicalNote`, `LatentState`, `RiskPrediction`).
-- [ ] Implement SQLite engine with database migration/initialization utilities.
-- [ ] Build Repository / CRUD service classes for patient management, visit sequences, and measurement storage.
-- [ ] Create preloaded clinically realistic patient profiles:
+### Phase 1: Core Database & Data Access Layer (Completed)
+- [x] Define SQLAlchemy database models (`Patient`, `Visit`, `Measurement`, `ClinicalNote`, `LatentState`, `RiskPrediction`).
+- [x] Implement SQLite engine with database migration/initialization utilities (`server/db/session.py`, `scripts/init_database.py`).
+- [x] Build Repository / CRUD service classes for patient management, visit sequences, and measurement storage (`server/crud/`).
+- [x] Create preloaded clinically realistic patient profiles (`server/demo_data/seed_data.py`):
   - Outpatient Profile A (Cardiovascular & Metabolic trajectory with routine labs across 3 annual visits).
   - Outpatient Profile B (Neurodegenerative / Dementia early-divergence profile).
   - Inpatient Profile C (ICU 48-hour septic trajectory with 4-hour lab steps and clinical progress notes).
-- [ ] Write automated tests validating schema constraints and CRUD operations.
-- [ ] **Push to Git**.
+- [x] Write automated tests validating schema constraints and CRUD operations (`tests/test_phase1_db.py` - 4/4 passed).
+- [x] **Push to Git**.
 
 ### Phase 2: PULSE Engine Service & Adaptation Layer
 - [ ] Build `PulseInferenceService`:
