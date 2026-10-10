@@ -153,21 +153,25 @@ The database stores both structured raw clinical inputs and PULSE-inferred laten
 - [ ] Write integration test suite verifying end-to-end API workflows.
 - [ ] **Push to Git**.
 
-### Phase 4: Interactive Web Interface (Clinical Frontend)
-- [ ] Design and implement responsive, high-contrast, clinician-friendly web application:
-  - **Header & Navigation**: Quick switch between Outpatient Omics Screening and ICU Acute Monitoring.
-  - **Patient Directory & Registry**: Search bar, MRN lookup, risk status badges, and "New Patient" button.
+### Phase 4: Interactive Web Interface (Clinical Frontend with shadcn/ui)
+- [ ] Initialize Next.js (App Router, TypeScript, Tailwind CSS) with **shadcn/ui**:
+  - Configure `components.json`, Tailwind color system, typography, and dark/light clinical mode.
+  - Install core shadcn/ui components (`Card`, `Button`, `Dialog`, `Sheet`, `Tabs`, `Badge`, `Progress`, `Select`, `Input`, `Table`, `Tooltip`, `Separator`, `ScrollArea`).
+  - Add `lucide-react` icons and Recharts for interactive clinical trajectory visualizations.
+- [ ] Build clinical UI modules with shadcn/ui:
+  - **Header & Navigation**: Quick switch between Outpatient Omics Screening and ICU Acute Monitoring with theme toggle.
+  - **Patient Directory & Registry**: Search bar, MRN lookup, risk status badges, and "New Patient" modal dialog.
   - **Interactive Patient Profile Builder**:
     - Demographics & baseline data input form.
     - Visit history manager (add new visit, date picker, encounter type).
     - Lab Entry Wizard:
       - Quick-fill preset buttons ("Normal Adult Panel", "Elevated Lipid / Metabolic Syndrome", "Cardiac Alert Panel", "ICU 48h Septic Labs").
-      - Numerical entry for standard 61 routine blood markers.
+      - Numerical entry for standard 61 routine blood markers with clinical validation.
       - Toggle for observed vs. missing omics.
       - Free-text area for clinical progress notes.
     - "Run PULSE Synthesis & Risk Analysis" action button with live progress indicator.
   - **Longitudinal Trajectory Visualization**:
-    - Interactive timeline chart showing measured labs across time.
+    - Interactive timeline chart showing measured labs across time with Recharts.
     - Visual trajectory divergence indicator showing patient deviation from personal baseline.
   - **Synthetic Omics Panel**:
     - Card grid of synthesized biomarkers (lipids, proteins, inflammatory markers).
@@ -199,8 +203,9 @@ The database stores both structured raw clinical inputs and PULSE-inferred laten
 | **Deep Learning Engine** | **PyTorch 1.9+** (`PulseModel`) | Reuses repository's core PULSE module (`pulse/model.py`, `pulse/core/`). |
 | **Database & ORM** | **SQLite + SQLAlchemy 2.0** | Zero-dependency, portable, persistent SQL database with robust relation modeling and JSON vector support. |
 | **Data Processing** | **NumPy, Pandas, Scikit-learn** | Standard clinical scaling, normalization, and evaluation metrics. |
-| **Frontend Framework** | **Modern Single-Page Application (HTML5 / Tailwind CSS / Vanilla JS or React)** | Zero external node-build friction, instant startup, fast responsive clinical dashboard, clean styling. |
-| **Visualization** | **Chart.js / Canvas** | Smooth, interactive longitudinal line trajectories, confidence bands, and risk gauges. |
+| **Frontend Framework** | **Next.js (App Router / React) + TypeScript** | Production-grade typed components with fast client navigation. |
+| **UI Components** | **shadcn/ui + Radix UI + Tailwind CSS** | Accessible, customizable, modern clinical design system with dark/light themes. |
+| **Icons & Charts** | **Lucide React + Recharts** | Medical icons and interactive longitudinal trajectory curves. |
 
 ---
 
