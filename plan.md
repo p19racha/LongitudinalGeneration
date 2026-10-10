@@ -208,6 +208,12 @@ The database stores both structured raw clinical inputs and PULSE-inferred laten
   - Migrated lab entry tables, report tables, and trajectory tables to official shadcn `<Table>`, `<TableHeader>`, `<TableRow>`, `<TableHead>`, `<TableBody>`, `<TableCell>`.
   - Implemented Interactive Digital Twin Simulation Sandbox in the frontend (`DigitalTwinView.tsx`) with shadcn sliders/inputs, before/after risk comparison meters, and counterfactual trajectory overlays.
 - [x] Write automated tests for counterfactual simulation (`tests/test_phase6_simulation.py` - 21/21 total tests passed).
+- [x] Remake whole frontend architecture using official `npx shadcn@latest init -t next`:
+  - Scaffolding re-created directly using official `npx shadcn@latest init -t next` template (`pulse-frontend`).
+  - Next.js 16 + React 19 + Tailwind CSS v4 + Base UI + tw-animate-css + class-variance-authority + Lucide React.
+  - Official shadcn components installed via `npx shadcn@latest add`: `card`, `dialog`, `tabs`, `table`, `badge`, `progress`, `input`, `button`, `separator`, `scroll-area`, `tooltip`, `select`.
+  - Re-integrated full clinical decision support views (`PatientDirectory`, `PatientDetailView`, `DigitalTwinView`, `RiskScorecardView`, `SyntheticOmicsView`, `TrajectoriesView`, `TimelineNotesView`, `Header`, `AddVisitModal`, `NewPatientModal`, `ReportModal`).
+  - Full TypeScript type-checking (`npm run typecheck`) and Turbopack production compilation (`npm run build`) passing with 0 errors.
 - [x] **Push to Git**.
 
 ---
