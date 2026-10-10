@@ -133,26 +133,27 @@ The database stores both structured raw clinical inputs and PULSE-inferred laten
 - [x] Tested with automated test suite (`tests/test_phase2_engine.py` - 9/9 total tests passed).
 - [x] **Push to Git**.
 
-### Phase 3: REST API Backend (FastAPI)
-- [ ] Implement robust FastAPI application structure:
+### Phase 3: REST API Backend (FastAPI) (Completed)
+- [x] Implement robust FastAPI application structure:
+  - `GET /api/features`: Biomarker catalogue with reference bounds and category filters.
   - `GET /api/patients`: List patients with pagination, search by name/MRN, and filter by cohort.
   - `POST /api/patients`: Create a new patient profile.
   - `GET /api/patients/{id}`: Full patient record with chronological visits, measurements, and predictions.
   - `PUT /api/patients/{id}`: Update patient demographics and clinical metadata.
   - `DELETE /api/patients/{id}`: Remove patient record.
   - `POST /api/patients/{id}/visits`: Add a new clinical encounter/visit.
-  - `POST /api/patients/{id}/visits/{visit_id}/measurements`: Add or update lab test results.
-  - `POST /api/patients/{id}/visits/{visit_id}/notes`: Add clinical narrative note.
+  - `POST /api/visits/{visit_id}/measurements`: Add or update lab test results.
+  - `POST /api/visits/{visit_id}/notes`: Add clinical narrative note.
   - `POST /api/patients/{id}/run-pulse`: Execute PULSE inference on patient trajectory:
     - Automatically builds missing masks (measured vs missing).
     - Propagates historical latent state $Z_P$.
     - Imputes missing metabolomics/proteomics.
     - Saves latent vectors and risk predictions to the database.
-  - `GET /api/patients/{id}/trajectory`: Retrieve longitudinal trend curves with measured vs. synthetic overlays.
+  - `GET /api/patients/{id}/trajectories`: Retrieve longitudinal trend curves with measured vs. synthetic overlays.
   - `GET /api/patients/{id}/report`: Generate structured clinical summary JSON.
-- [ ] Include interactive Swagger UI (`/docs`) and OpenAPI documentation.
-- [ ] Write integration test suite verifying end-to-end API workflows.
-- [ ] **Push to Git**.
+- [x] Include interactive Swagger UI (`/docs`) and OpenAPI documentation.
+- [x] Write integration test suite verifying end-to-end API workflows (`tests/test_phase3_api.py` - 16/16 total tests passed).
+- [x] **Push to Git**.
 
 ### Phase 4: Interactive Web Interface (Clinical Frontend with shadcn/ui)
 - [ ] Initialize Next.js (App Router, TypeScript, Tailwind CSS) with **shadcn/ui**:

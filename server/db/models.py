@@ -198,11 +198,37 @@ class LatentState(Base):
 
     visit: Mapped[Visit] = relationship("Visit", back_populates="latent_state")
 
+    @property
+    def z_vector(self) -> List[float]:
+        if not self.z_state_json:
+            return []
+        try:
+            return json.loads(self.z_state_json)
+        except Exception:
+            return []
+
+    @z_vector.setter
+    def z_vector(self, vec: List[float]) -> None:
+        self.z_state_json = json.dumps(vec)
+
+    @property
+    def past_vector(self) -> Optional[List[float]]:
+        if not self.past_state_json:
+            return None
+        try:
+            return json.loads(self.past_state_json)
+        except Exception:
+            return None
+
+    @past_vector.setter
+    def past_vector(self, vec: Optional[List[float]]) -> None:
+        self.past_state_json = json.dumps(vec) if vec is not None else None
+
     def get_z_vector(self) -> List[float]:
-        return json.loads(self.z_state_json)
+        return self.z_vector
 
     def set_z_vector(self, vec: List[float]) -> None:
-        self.z_state_json = json.dumps(vec)
+        self.z_vector = vec
 
 
 class RiskPrediction(Base):
@@ -228,10 +254,21 @@ class RiskPrediction(Base):
 
     visit: Mapped[Visit] = relationship("Visit", back_populates="predictions")
 
-    def get_top_drivers(self) -> List[Dict[str, Any]]:
+    @property
+    def top_drivers(self) -> List[Dict[str, Any]]:
         if not self.top_drivers_json:
             return []
-        return json.loads(self.top_drivers_json)
+        try:
+            return json.loads(self.top_drivers_json)
+        except Exception:
+            return []
+
+    @top_drivers.setter
+    def top_drivers(self, drivers: List[Dict[str, Any]]) -> None:
+        self.top_drivers_json = json.dumps(drivers) if drivers is not None else None
+
+    def get_top_drivers(self) -> List[Dict[str, Any]]:
+        return self.top_drivers
 
     def set_top_drivers(self, drivers: List[Dict[str, Any]]) -> None:
-        self.top_drivers_json = json.dumps(drivers)
+        self.top_drivers = drivers
