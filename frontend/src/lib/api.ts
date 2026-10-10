@@ -125,6 +125,16 @@ export const api = {
   getExportCsvUrl: (patientId: string): string =>
     `${API_BASE_URL}/api/patients/${patientId}/export/csv`,
 
+  // Digital Twin Simulation
+  simulateIntervention: (
+    patientId: string,
+    interventions: Record<string, number>
+  ): Promise<any> =>
+    request<any>(`/api/patients/${patientId}/simulate-intervention`, {
+      method: "POST",
+      body: JSON.stringify({ interventions }),
+    }),
+
   // Health
   checkHealth: (): Promise<{ status: string; service: string }> =>
     request<{ status: string; service: string }>("/health"),

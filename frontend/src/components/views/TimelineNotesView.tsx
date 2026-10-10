@@ -5,6 +5,14 @@ import { Clock, FileText, ChevronDown, ChevronRight, Activity, PlusCircle, Check
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 import { Patient, Visit } from "@/types/clinical";
 
 interface TimelineNotesViewProps {
@@ -178,46 +186,52 @@ export function TimelineNotesView({
                         <p className="text-xs text-slate-400 italic">No lab values entered for this encounter.</p>
                       ) : (
                         <div className="overflow-x-auto max-h-60 border border-slate-200 rounded-lg">
-                          <table className="w-full text-xs text-left">
-                            <thead className="bg-slate-50 text-[11px] text-slate-500 font-medium border-b border-slate-200 sticky top-0">
-                              <tr>
-                                <th className="p-2">Biomarker</th>
-                                <th className="p-2">Category</th>
-                                <th className="p-2">Value</th>
-                                <th className="p-2">Source</th>
-                                <th className="p-2">Ref Range</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 font-mono">
+                          <Table>
+                            <TableHeader className="bg-slate-50 sticky top-0">
+                              <TableRow>
+                                <TableHead className="font-bold text-slate-700">Biomarker</TableHead>
+                                <TableHead className="font-bold text-slate-700">Category</TableHead>
+                                <TableHead className="font-bold text-slate-700">Value</TableHead>
+                                <TableHead className="font-bold text-slate-700">Source</TableHead>
+                                <TableHead className="font-bold text-slate-700">Ref Range</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody className="font-mono text-xs">
                               {measurements.map((m) => (
-                                <tr key={m.id} className="hover:bg-slate-50">
-                                  <td className="p-2 font-medium font-sans text-slate-800">
+                                <TableRow key={m.id} className="hover:bg-slate-50">
+                                  <TableCell className="font-medium font-sans text-slate-800">
                                     {m.feature_name}
-                                  </td>
-                                  <td className="p-2 text-slate-500 text-[11px]">
+                                  </TableCell>
+                                  <TableCell className="text-slate-500 text-[11px]">
                                     {m.feature_category}
-                                  </td>
-                                  <td className="p-2 font-bold text-slate-900">
+                                  </TableCell>
+                                  <TableCell className="font-bold text-slate-900">
                                     {m.value.toFixed(2)} {m.unit}
-                                  </td>
-                                  <td className="p-2">
+                                  </TableCell>
+                                  <TableCell>
                                     {m.is_synthetic ? (
-                                      <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                                      <Badge
+                                        variant="outline"
+                                        className="text-[10px] font-bold text-purple-700 bg-purple-50 border-purple-200"
+                                      >
                                         Synthesized
-                                      </span>
+                                      </Badge>
                                     ) : (
-                                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                      <Badge
+                                        variant="outline"
+                                        className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border-emerald-200"
+                                      >
                                         Observed
-                                      </span>
+                                      </Badge>
                                     )}
-                                  </td>
-                                  <td className="p-2 text-slate-500 text-[11px]">
+                                  </TableCell>
+                                  <TableCell className="text-slate-500 text-[11px]">
                                     {m.ref_low ?? "—"} – {m.ref_high ?? "—"}
-                                  </td>
-                                </tr>
+                                  </TableCell>
+                                </TableRow>
                               ))}
-                            </tbody>
-                          </table>
+                            </TableBody>
+                          </Table>
                         </div>
                       )}
                     </div>

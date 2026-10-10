@@ -1,9 +1,18 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Plus, Sparkles, Activity, FileText, Check } from "lucide-react";
+import { Plus, Sparkles, Activity, FileText } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Patient, VisitCreate, MeasurementCreate } from "@/types/clinical";
 
 interface AddVisitModalProps {
@@ -24,7 +33,7 @@ export function AddVisitModal({
   const lastHours = patient.visits?.length
     ? patient.visits[patient.visits.length - 1].hours_from_baseline
     : 0;
-  const nextHours = isIcu ? lastHours + 4 : lastHours + 8760; // +4h for ICU, +1 yr for outpatient
+  const nextHours = isIcu ? lastHours + 4 : lastHours + 8760;
 
   const [visitDate, setVisitDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -39,8 +48,6 @@ export function AddVisitModal({
   const [measurements, setMeasurements] = useState<Record<string, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  if (!isOpen) return null;
 
   // Presets
   const applyPresetNormal = () => {
@@ -206,91 +213,93 @@ export function AddVisitModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-      <div className="bg-white w-full max-w-2xl max-h-[90vh] rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
-        {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/70">
-          <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center">
-              <Plus className="h-5 w-5" />
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-2xl max-h-[92vh] overflow-y-auto">
+        <DialogHeader>
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center">
+              <Plus className="h-4 w-4" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 text-base">
+              <DialogTitle className="text-base font-bold text-slate-900">
                 Record Clinical Encounter #{nextVisitIndex}
-              </h3>
-              <p className="text-xs text-slate-500">
+              </DialogTitle>
+              <DialogDescription className="text-xs text-slate-500">
                 Patient: <strong className="text-slate-800">{patient.full_name}</strong> ({patient.mrn})
-              </p>
+              </DialogDescription>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+        </DialogHeader>
 
         {/* Preset Quick Fill Buttons */}
-        <div className="bg-slate-50 p-3 px-5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
-          <span className="font-semibold text-slate-700 flex items-center gap-1">
+        <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <span className="font-semibold text-slate-700 flex items-center gap-1 text-[11px]">
             <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
             Lab Panel Presets:
           </span>
           <div className="flex flex-wrap gap-1.5">
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={applyPresetNormal}
-              className="text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200 font-medium hover:bg-emerald-100 transition"
+              className="h-7 text-xs bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
             >
               Normal Panel
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={applyPresetMetabolic}
-              className="text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200 font-medium hover:bg-amber-100 transition"
+              className="h-7 text-xs bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
             >
               High Lipids / Metabolic
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={applyPresetCardiac}
-              className="text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-200 font-medium hover:bg-indigo-100 transition"
+              className="h-7 text-xs bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100"
             >
               Cardiovascular Alert
-            </button>
+            </Button>
             {isIcu && (
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={applyPresetIcuSepsis}
-                className="text-rose-700 bg-rose-50 px-2.5 py-1 rounded-md border border-rose-200 font-medium hover:bg-rose-100 transition"
+                className="h-7 text-xs bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
               >
                 Septic Deterioration
-              </button>
+              </Button>
             )}
           </div>
         </div>
 
-        {/* Scrollable Form Body */}
-        <form onSubmit={handleSubmit} className="p-5 overflow-y-auto space-y-4 text-xs flex-1">
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs pt-1">
           {error && (
-            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg font-medium">
+            <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg font-medium text-xs">
               {error}
             </div>
           )}
 
-          {/* Encounter Timing */}
+          {/* Timing */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label className="font-bold text-slate-700">Encounter Date</label>
               <Input
                 type="date"
                 value={visitDate}
                 onChange={(e) => setVisitDate(e.target.value)}
                 required
+                className="text-xs"
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label className="font-bold text-slate-700">
                 Hours from Baseline (h)
               </label>
@@ -300,32 +309,34 @@ export function AddVisitModal({
                 value={hoursFromBaseline}
                 onChange={(e) => setHoursFromBaseline(Number(e.target.value))}
                 required
+                className="text-xs font-mono"
               />
             </div>
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <label className="font-bold text-slate-700">Encounter Summary</label>
             <Input
               value={visitSummary}
               onChange={(e) => setVisitSummary(e.target.value)}
               placeholder="e.g. Annual follow up, Routine metabolic monitoring..."
+              className="text-xs"
             />
           </div>
 
           {/* Lab Entry Wizard Grid */}
           <div className="space-y-2 pt-2 border-t border-slate-100">
             <div className="flex items-center justify-between">
-              <h4 className="font-bold text-slate-800 flex items-center gap-1.5">
+              <span className="font-bold text-slate-800 flex items-center gap-1.5 text-xs">
                 <Activity className="h-4 w-4 text-indigo-600" />
                 Laboratory Test Entries ({Object.keys(measurements).length} filled)
-              </h4>
+              </span>
               <span className="text-[11px] text-slate-400">
-                Leave empty for unobserved / missing markers
+                Leave blank for unobserved markers
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-56 overflow-y-auto p-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto p-1 border border-slate-200 rounded-lg">
               {labDefinitions.map((lab) => {
                 const currentVal = measurements[lab.name];
                 const isOutOfRange =
@@ -335,20 +346,20 @@ export function AddVisitModal({
                 return (
                   <div
                     key={lab.name}
-                    className={`p-2.5 rounded-lg border flex flex-col justify-between transition ${
+                    className={`p-2 rounded-md border flex flex-col justify-between transition ${
                       currentVal !== undefined
                         ? isOutOfRange
                           ? "bg-rose-50/50 border-rose-200"
                           : "bg-emerald-50/50 border-emerald-200"
-                        : "bg-slate-50 border-slate-200"
+                        : "bg-slate-50/50 border-slate-200"
                     }`}
                   >
                     <div className="flex justify-between items-baseline mb-1">
                       <span className="font-bold text-slate-800 text-[11px]">
                         {lab.label}
                       </span>
-                      <span className="text-[10px] text-slate-500 font-mono">
-                        [{lab.ref_low} – {lab.ref_high} {lab.unit}]
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        [{lab.ref_low}–{lab.ref_high}]
                       </span>
                     </div>
 
@@ -359,9 +370,9 @@ export function AddVisitModal({
                         placeholder="Not tested"
                         value={currentVal !== undefined ? currentVal : ""}
                         onChange={(e) => handleInputChange(lab.name, e.target.value)}
-                        className="h-8 text-xs font-mono bg-white"
+                        className="h-7 text-xs font-mono bg-white"
                       />
-                      <span className="text-[11px] text-slate-500 font-medium w-14 shrink-0">
+                      <span className="text-[10px] text-slate-500 font-medium w-12 shrink-0">
                         {lab.unit}
                       </span>
                     </div>
@@ -371,36 +382,36 @@ export function AddVisitModal({
             </div>
           </div>
 
-          {/* Clinical Narrative Note */}
-          <div className="space-y-1 pt-2 border-t border-slate-100">
+          {/* Narrative Note */}
+          <div className="space-y-1.5 pt-2 border-t border-slate-100">
             <label className="font-bold text-slate-700 flex items-center gap-1.5">
               <FileText className="h-3.5 w-3.5 text-indigo-600" />
               Clinical Narrative Progress Note (Optional)
             </label>
             <textarea
               rows={3}
-              placeholder="Enter physician assessment, nursing notes, hemodynamic remarks, or discharge plan..."
+              placeholder="Enter physician assessment, nursing notes, or care plan..."
               value={noteText}
               onChange={(e) => setNoteText(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 rounded-md p-2.5 text-xs text-slate-800 focus:ring-2 focus:ring-indigo-500"
+              className="w-full bg-slate-50 border border-slate-300 rounded-md p-2 text-xs text-slate-800 focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
-          {/* Submit Action */}
-          <div className="pt-3 border-t border-slate-100 flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+          <DialogFooter className="pt-3">
+            <Button type="button" variant="outline" size="sm" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
             <Button
               type="submit"
+              size="sm"
               disabled={isSubmitting}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
             >
-              {isSubmitting ? "Recording Encounter..." : "Save Encounter & Labs"}
+              {isSubmitting ? "Saving Encounter..." : "Save Encounter & Labs"}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

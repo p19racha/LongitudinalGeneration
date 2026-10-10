@@ -1,8 +1,23 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { X, Printer, FileText, Activity, ShieldAlert, Sparkles, CheckCircle2 } from "lucide-react";
+import { Printer, FileText, Activity, ShieldAlert } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 import { api } from "@/lib/api";
 import { Patient, ClinicalReport } from "@/types/clinical";
 
@@ -39,16 +54,14 @@ export function ReportModal({
       });
   }, [isOpen, patient.id]);
 
-  if (!isOpen) return null;
-
   const handlePrint = () => {
     window.print();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-      <div className="bg-white w-full max-w-3xl max-h-[92vh] rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
-        {/* Modal Controls (Hidden in Print) */}
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-3xl max-h-[92vh] overflow-y-auto p-0">
+        {/* Modal Controls Bar */}
         <div className="print:hidden flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-indigo-600" />
@@ -56,26 +69,18 @@ export function ReportModal({
               Clinical Decision Support Dossier Preview
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={handlePrint}
-              size="sm"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs gap-1.5"
-            >
-              <Printer className="h-4 w-4" />
-              <span>Print / Save as PDF</span>
-            </Button>
-            <button
-              onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-200 transition"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+          <Button
+            onClick={handlePrint}
+            size="sm"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs gap-1.5"
+          >
+            <Printer className="h-4 w-4" />
+            <span>Print / Save as PDF</span>
+          </Button>
         </div>
 
-        {/* Report Content Document */}
-        <div className="p-8 overflow-y-auto space-y-6 text-slate-900 bg-white">
+        {/* Report Content Body */}
+        <div className="p-6 sm:p-8 space-y-6 text-slate-900 bg-white">
           {isLoading ? (
             <div className="py-20 text-center space-y-3">
               <Activity className="h-8 w-8 animate-spin text-indigo-600 mx-auto" />
@@ -102,13 +107,13 @@ export function ReportModal({
                   </p>
                 </div>
                 <div className="text-right font-mono text-[11px] text-slate-600">
-                  <p>Generated: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</p>
+                  <p>Generated: {new Date().toLocaleDateString()}</p>
                   <p className="font-bold text-slate-900">MRN: {report.mrn}</p>
                 </div>
               </div>
 
               {/* Patient Demographics Box */}
-              <div className="grid grid-cols-4 gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <div>
                   <span className="text-[10px] text-slate-400 font-semibold uppercase block">Patient Name</span>
                   <span className="font-bold text-sm text-slate-900">{report.full_name}</span>
@@ -147,7 +152,7 @@ export function ReportModal({
                 {report.risk_scorecard.length === 0 ? (
                   <p className="text-slate-400 italic">No risk predictions computed.</p>
                 ) : (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {report.risk_scorecard.map((r, idx) => (
                       <div
                         key={idx}
@@ -188,7 +193,7 @@ export function ReportModal({
                 )}
               </div>
 
-              {/* Synthesized Molecular Omics Panel */}
+              {/* Synthesized Molecular Omics Panel via shadcn Table */}
               <div className="space-y-2">
                 <h3 className="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center justify-between">
                   <span>PULSE Generative Molecular Omics Profile</span>
@@ -199,40 +204,42 @@ export function ReportModal({
                 {report.synthesized_biomarkers.length === 0 ? (
                   <p className="text-slate-400 italic">No synthesized molecular omics.</p>
                 ) : (
-                  <table className="w-full text-left border border-slate-200">
-                    <thead className="bg-slate-100 text-[10px] text-slate-600 font-semibold border-b border-slate-200">
-                      <tr>
-                        <th className="p-2">Synthesized Biomarker</th>
-                        <th className="p-2">Value</th>
-                        <th className="p-2">95% Confidence Interval</th>
-                        <th className="p-2">Reference Range</th>
-                        <th className="p-2">Evaluation</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200 font-mono text-[11px]">
-                      {report.synthesized_biomarkers.map((b, idx) => (
-                        <tr key={idx}>
-                          <td className="p-2 font-bold font-sans text-slate-900">{b.feature}</td>
-                          <td className="p-2 font-bold">{b.value.toFixed(2)} {b.unit}</td>
-                          <td className="p-2 text-purple-800">[{b.ci_95[0].toFixed(2)}, {b.ci_95[1].toFixed(2)}]</td>
-                          <td className="p-2 text-slate-500">{b.reference_range[0]} – {b.reference_range[1]} {b.unit}</td>
-                          <td className="p-2 font-sans">
-                            <span
-                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                                b.status === "HIGH"
-                                  ? "bg-rose-100 text-rose-800"
-                                  : b.status === "LOW"
-                                  ? "bg-blue-100 text-blue-800"
-                                  : "bg-emerald-100 text-emerald-800"
-                              }`}
-                            >
-                              {b.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <div className="border border-slate-200 rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader className="bg-slate-50">
+                        <TableRow>
+                          <TableHead className="font-bold text-slate-700">Synthesized Biomarker</TableHead>
+                          <TableHead className="font-bold text-slate-700">Value</TableHead>
+                          <TableHead className="font-bold text-slate-700">95% Confidence Interval</TableHead>
+                          <TableHead className="font-bold text-slate-700">Reference Range</TableHead>
+                          <TableHead className="font-bold text-slate-700">Evaluation</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody className="font-mono text-[11px]">
+                        {report.synthesized_biomarkers.map((b, idx) => (
+                          <TableRow key={idx}>
+                            <TableCell className="font-bold font-sans text-slate-900">{b.feature}</TableCell>
+                            <TableCell className="font-bold">{b.value.toFixed(2)} {b.unit}</TableCell>
+                            <TableCell className="text-purple-800">[{b.ci_95[0].toFixed(2)}, {b.ci_95[1].toFixed(2)}]</TableCell>
+                            <TableCell className="text-slate-500">{b.reference_range[0]}–{b.reference_range[1]} {b.unit}</TableCell>
+                            <TableCell className="font-sans">
+                              <span
+                                className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                  b.status === "HIGH"
+                                    ? "bg-rose-100 text-rose-800"
+                                    : b.status === "LOW"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : "bg-emerald-100 text-emerald-800"
+                                }`}
+                              >
+                                {b.status}
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 )}
               </div>
 
@@ -262,7 +269,7 @@ export function ReportModal({
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

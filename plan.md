@@ -197,6 +197,19 @@ The database stores both structured raw clinical inputs and PULSE-inferred laten
 - [x] Production build verification (`npm run build` in Next.js frontend succeeded with 0 errors).
 - [x] **Push to Git**.
 
+### Phase 6: Clinical Digital Twin "What-If" Simulation & Deep shadcn/ui Refinement (Completed)
+- [x] Implement backend counterfactual simulation endpoint (`POST /api/patients/{id}/simulate-intervention`):
+  - Ingest hypothetical clinical target interventions (e.g. LDL statin reduction, HbA1c control, septic fluid resuscitation MAP/lactate goals).
+  - Forward-propagate intervened trajectory through PULSE latent state.
+  - Project counterfactual trajectory curves and projected risk reduction delta.
+- [x] Comprehensive **shadcn UI** component refactoring across all views:
+  - Migrated all modal dialogs (`NewPatientModal`, `AddVisitModal`, `ReportModal`) to official shadcn `<Dialog>`, `<DialogContent>`, `<DialogHeader>`, `<DialogTitle>`, `<DialogDescription>`, `<DialogFooter>`.
+  - Migrated navigation and category tabs to official shadcn `<Tabs>`, `<TabsList>`, `<TabsTrigger>`, `<TabsContent>`.
+  - Migrated lab entry tables, report tables, and trajectory tables to official shadcn `<Table>`, `<TableHeader>`, `<TableRow>`, `<TableHead>`, `<TableBody>`, `<TableCell>`.
+  - Implemented Interactive Digital Twin Simulation Sandbox in the frontend (`DigitalTwinView.tsx`) with shadcn sliders/inputs, before/after risk comparison meters, and counterfactual trajectory overlays.
+- [x] Write automated tests for counterfactual simulation (`tests/test_phase6_simulation.py` - 21/21 total tests passed).
+- [x] **Push to Git**.
+
 ---
 
 ## 4. Technology Stack Specification

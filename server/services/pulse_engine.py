@@ -332,3 +332,122 @@ class PulseInferenceService:
 
         db.commit()
         return get_patient(db, patient_id)
+
+    def simulate_counterfactual_intervention(
+        self,
+        db: Session,
+        patient_id: str,
+        interventions: Dict[str, float],
+    ) -> Dict[str, Any]:
+        """
+        Simulate counterfactual clinical interventions (Digital Twin Sandbox).
+        Takes hypothetical therapeutic targets (e.g. lowering LDL to 70 mg/dL with statins or
+        normalizing MAP to 75 mmHg) and projects downstream risk changes without modifying the database.
+        """
+        patient = get_patient(db, patient_id)
+        if not patient or not patient.visits:
+            raise ValueError("Patient must have at least one visit to simulate interventions.")
+
+        latest_visit = patient.visits[-1]
+        baseline_visit = patient.visits[0]
+
+        # 1. Base measurements map
+        current_measurements: Dict[str, float] = {}
+        for m in latest_visit.measurements:
+            current_measurements[m.feature_name] = m.feature_value
+
+        baseline_measurements: Dict[str, float] = {}
+        for m in baseline_visit.measurements:
+            baseline_measurements[m.feature_name] = m.feature_value
+
+        # 2. Original risks
+        notes_text = " ".join([n.note_text for n in latest_visit.clinical_notes])
+        original_risks = RiskModelService.evaluate_visit_risks(
+            age=patient.age,
+            sex=patient.sex,
+            cohort_type=patient.cohort_type,
+            measurements=current_measurements,
+            baseline_measurements=baseline_measurements,
+            notes_text=notes_text,
+        )
+
+        # 3. Apply interventions with case-insensitive matching
+        simulated_measurements = dict(current_measurements)
+        for feat, target_val in interventions.items():
+            target_float = float(target_val)
+            matched_key = feat
+            for existing_k in current_measurements.keys():
+                if existing_k.lower() == feat.lower():
+                    matched_key = existing_k
+                    break
+            simulated_measurements[matched_key] = target_float
+
+        # 4. Synthesize simulated omics based on intervened labs
+        ldl_val = next(
+            (v for k, v in simulated_measurements.items() if k.lower() == "ldl_cholesterol"),
+            None,
+        )
+        if ldl_val is not None:
+            orig_ldl = next(
+                (v for k, v in current_measurements.items() if k.lower() == "ldl_cholesterol"),
+                130.0,
+            )
+            ldl_factor = ldl_val / max(orig_ldl, 10.0)
+            for k in list(simulated_measurements.keys()):
+                if "apob" in k.lower() or "ratio_apob" in k.lower():
+                    simulated_measurements[k] *= max(0.4, min(1.3, ldl_factor))
+                if "vldl" in k.lower() or "free_cholesterol" in k.lower():
+                    simulated_measurements[k] *= max(0.5, min(1.2, ldl_factor))
+
+        map_val = next(
+            (v for k, v in simulated_measurements.items() if k.lower() == "map"),
+            None,
+        )
+        if map_val is not None:
+            for k in list(simulated_measurements.keys()):
+                if "nt_probnp" in k.lower():
+                    simulated_measurements[k] = max(50.0, simulated_measurements[k] * 0.8)
+
+        # 5. Evaluate simulated risks
+        simulated_risks = RiskModelService.evaluate_visit_risks(
+            age=patient.age,
+            sex=patient.sex,
+            cohort_type=patient.cohort_type,
+            measurements=simulated_measurements,
+            baseline_measurements=baseline_measurements,
+            notes_text=notes_text,
+        )
+
+        # 6. Compute risk reductions
+        orig_map = {r["disease_name"]: r for r in original_risks}
+        comparisons = []
+        for sim in simulated_risks:
+            d_name = sim["disease_name"]
+            orig = orig_map.get(d_name, sim)
+            orig_p = orig["risk_probability"]
+            sim_p = sim["risk_probability"]
+            abs_delta = orig_p - sim_p
+            rel_delta = (abs_delta / orig_p * 100) if orig_p > 0 else 0.0
+
+            comparisons.append({
+                "disease_name": d_name,
+                "original_probability": round(orig_p, 4),
+                "original_category": orig["risk_category"].value,
+                "simulated_probability": round(sim_p, 4),
+                "simulated_category": sim["risk_category"].value,
+                "absolute_risk_reduction": round(abs_delta, 4),
+                "relative_risk_reduction_pct": round(rel_delta, 1),
+            })
+
+        return {
+            "patient_id": patient.id,
+            "mrn": patient.mrn,
+            "cohort_type": patient.cohort_type.value,
+            "interventions_applied": interventions,
+            "risk_comparisons": comparisons,
+            "simulated_measurements_sample": {
+                k: round(v, 2)
+                for k, v in simulated_measurements.items()
+                if k in interventions or k in ["ratio_ApoB_ApoA1", "pct_S_VLDL_TG", "NT_proBNP", "GFAP"]
+            },
+        }

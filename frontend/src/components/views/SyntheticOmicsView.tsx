@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Dna, Sparkles, CheckCircle2, AlertCircle, Info, HelpCircle } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Patient, Measurement } from "@/types/clinical";
 
 interface SyntheticOmicsViewProps {
@@ -110,39 +111,31 @@ export function SyntheticOmicsView({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs">
-            <button
-              onClick={() => setSelectedCategory("ALL")}
-              className={`px-3 py-1 rounded-md transition font-medium ${
-                selectedCategory === "ALL"
-                  ? "bg-white text-purple-700 shadow-xs font-bold"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              All Omics ({omicsMeasurements.length})
-            </button>
-            <button
-              onClick={() => setSelectedCategory("metabolomics")}
-              className={`px-3 py-1 rounded-md transition font-medium ${
-                selectedCategory === "metabolomics"
-                  ? "bg-white text-purple-700 shadow-xs font-bold"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              Metabolomics
-            </button>
-            <button
-              onClick={() => setSelectedCategory("proteomics")}
-              className={`px-3 py-1 rounded-md transition font-medium ${
-                selectedCategory === "proteomics"
-                  ? "bg-white text-purple-700 shadow-xs font-bold"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              Proteomics
-            </button>
-          </div>
+        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg border border-slate-200">
+          <Button
+            variant={selectedCategory === "ALL" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setSelectedCategory("ALL")}
+            className={`h-7 text-xs font-semibold ${selectedCategory === "ALL" ? "bg-purple-600 hover:bg-purple-700 text-white shadow-xs" : "text-slate-600"}`}
+          >
+            All Omics ({omicsMeasurements.length})
+          </Button>
+          <Button
+            variant={selectedCategory === "metabolomics" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setSelectedCategory("metabolomics")}
+            className={`h-7 text-xs font-semibold ${selectedCategory === "metabolomics" ? "bg-purple-600 hover:bg-purple-700 text-white shadow-xs" : "text-slate-600"}`}
+          >
+            Metabolomics
+          </Button>
+          <Button
+            variant={selectedCategory === "proteomics" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setSelectedCategory("proteomics")}
+            className={`h-7 text-xs font-semibold ${selectedCategory === "proteomics" ? "bg-purple-600 hover:bg-purple-700 text-white shadow-xs" : "text-slate-600"}`}
+          >
+            Proteomics
+          </Button>
         </div>
       </div>
 
@@ -193,13 +186,19 @@ export function SyntheticOmicsView({
 
                     {/* Green (Measured) vs Purple (Synthesized) Badge */}
                     {m.is_synthetic ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] font-bold bg-purple-100 text-purple-800 border-purple-200 gap-1"
+                      >
                         <Sparkles className="h-3 w-3" /> PULSE Synthesized
-                      </span>
+                      </Badge>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] font-bold bg-emerald-100 text-emerald-800 border-emerald-200 gap-1"
+                      >
                         <CheckCircle2 className="h-3 w-3" /> Measured in Lab
-                      </span>
+                      </Badge>
                     )}
                   </div>
                 </CardHeader>
@@ -224,11 +223,12 @@ export function SyntheticOmicsView({
                       )}
                     </div>
 
-                    <span
-                      className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${status.color}`}
+                    <Badge
+                      variant="outline"
+                      className={`text-[11px] font-bold ${status.color}`}
                     >
                       {status.label}
-                    </span>
+                    </Badge>
                   </div>
 
                   {/* Reference Range Visual Bar */}

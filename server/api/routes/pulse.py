@@ -113,6 +113,44 @@ def execute_pulse_synthesis(
     )
 
 
+class InterventionSimulationRequest(BaseModel):
+    interventions: Dict[str, float]
+
+
+@router.post("/patients/{patient_id}/simulate-intervention")
+def simulate_counterfactual_intervention(
+    patient_id: str,
+    payload: InterventionSimulationRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Simulate what-if counterfactual intervention targets (PULSE Digital Twin Sandbox).
+    """
+    patient = get_patient(db, patient_id)
+    if not patient:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Patient with ID '{patient_id}' not found.",
+        )
+    if not patient.visits:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot simulate interventions for patient with no visits.",
+        )
+
+    service = PulseInferenceService.get_instance()
+    try:
+        result = service.simulate_counterfactual_intervention(
+            db, patient_id, payload.interventions
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+
+
 @router.get("/patients/{patient_id}/trajectories", response_model=PatientTrajectoriesResponse)
 def get_patient_trajectories(
     patient_id: str,

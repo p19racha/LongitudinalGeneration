@@ -13,15 +13,18 @@ import {
   ShieldCheck,
   TrendingUp,
   User,
+  Sliders,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Patient, VisitCreate } from "@/types/clinical";
 import { RiskScorecardView } from "@/components/views/RiskScorecardView";
 import { SyntheticOmicsView } from "@/components/views/SyntheticOmicsView";
 import { TrajectoriesView } from "@/components/views/TrajectoriesView";
 import { TimelineNotesView } from "@/components/views/TimelineNotesView";
+import { DigitalTwinView } from "@/components/views/DigitalTwinView";
 import { AddVisitModal } from "@/components/AddVisitModal";
 import { ReportModal } from "@/components/ReportModal";
 
@@ -42,9 +45,7 @@ export function PatientDetailView({
   onDeletePatient,
   isRunningPulse,
 }: PatientDetailViewProps) {
-  const [activeTab, setActiveTab] = useState<
-    "risk" | "synthetic_omics" | "trajectories" | "timeline"
-  >("risk");
+  const [activeTab, setActiveTab] = useState<string>("risk");
   const [isAddVisitOpen, setIsAddVisitOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -122,7 +123,7 @@ export function PatientDetailView({
           </div>
 
           {/* Action Toolbar */}
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Primary PULSE Action */}
             <Button
               onClick={onRunPulse}
@@ -136,6 +137,7 @@ export function PatientDetailView({
             {/* Add Encounter */}
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setIsAddVisitOpen(true)}
               className="text-xs font-semibold text-slate-700 border-slate-300 hover:bg-slate-50 gap-1.5"
             >
@@ -146,6 +148,7 @@ export function PatientDetailView({
             {/* Generate Report */}
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setIsReportOpen(true)}
               className="text-xs font-semibold text-slate-700 border-slate-300 hover:bg-slate-50 gap-1.5"
             >
@@ -156,18 +159,21 @@ export function PatientDetailView({
             {/* Export CSV */}
             <Button
               variant="outline"
+              size="sm"
               onClick={() => {
                 window.open(`http://localhost:8000/api/patients/${patient.id}/export/csv`, "_blank");
               }}
-              className="text-xs font-semibold text-slate-700 border-slate-300 hover:bg-slate-50 gap-1.5"
+              className="text-xs font-semibold text-slate-700 border-slate-300 hover:bg-slate-50 gap-1"
               title="Download Longitudinal Measurements as CSV"
             >
-              <span>Export CSV</span>
+              <Download className="h-3.5 w-3.5" />
+              <span>CSV</span>
             </Button>
 
             {/* Export FHIR */}
             <Button
               variant="outline"
+              size="sm"
               onClick={async () => {
                 try {
                   const fhir = await (await fetch(`http://localhost:8000/api/patients/${patient.id}/export/fhir`)).json();
@@ -178,14 +184,15 @@ export function PatientDetailView({
                   a.download = `${patient.mrn}_fhir_bundle.json`;
                   a.click();
                   URL.revokeObjectURL(url);
-                } catch (e) {
+                } catch {
                   alert("Export failed.");
                 }
               }}
-              className="text-xs font-semibold text-slate-700 border-slate-300 hover:bg-slate-50 gap-1.5"
+              className="text-xs font-semibold text-slate-700 border-slate-300 hover:bg-slate-50 gap-1"
               title="Export as HL7 FHIR R4 Bundle"
             >
-              <span>FHIR JSON</span>
+              <Download className="h-3.5 w-3.5" />
+              <span>FHIR</span>
             </Button>
 
             {/* Delete Patient */}
@@ -194,7 +201,7 @@ export function PatientDetailView({
               size="icon"
               onClick={handleDelete}
               disabled={isDeleting}
-              className="text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+              className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 h-8 w-8"
               title="Delete Patient Record"
             >
               <Trash2 className="h-4 w-4" />
@@ -214,86 +221,84 @@ export function PatientDetailView({
             21 CFR Part 11 Audit Active
           </span>
         </div>
-
-        {/* Navigation Tabs Bar */}
-        <div className="mt-6 pt-4 border-t border-slate-100 flex flex-wrap gap-2">
-          <button
-            onClick={() => setActiveTab("risk")}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 ${
-              activeTab === "risk"
-                ? "bg-indigo-600 text-white shadow-xs"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
-          >
-            <ShieldCheck className="h-4 w-4" />
-            <span>Prognostic Risk Scorecard</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("synthetic_omics")}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 ${
-              activeTab === "synthetic_omics"
-                ? "bg-purple-600 text-white shadow-xs"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
-          >
-            <Dna className="h-4 w-4" />
-            <span>Synthetic Omics Panel</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("trajectories")}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 ${
-              activeTab === "trajectories"
-                ? "bg-indigo-600 text-white shadow-xs"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
-          >
-            <TrendingUp className="h-4 w-4" />
-            <span>Longitudinal Trajectories</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("timeline")}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 ${
-              activeTab === "timeline"
-                ? "bg-indigo-600 text-white shadow-xs"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
-          >
-            <Calendar className="h-4 w-4" />
-            <span>Encounters & Notes ({visits.length})</span>
-          </button>
-        </div>
       </div>
 
-      {/* Tab Panels */}
-      {activeTab === "risk" && (
-        <RiskScorecardView
-          patient={patient}
-          onRunPulse={onRunPulse}
-          isRunningPulse={isRunningPulse}
-        />
-      )}
+      {/* Official shadcn Tabs Component */}
+      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val)} className="w-full space-y-6">
+        <TabsList className="bg-slate-100 p-1 h-auto flex flex-wrap gap-1 rounded-xl border border-slate-200">
+          <TabsTrigger
+            value="risk"
+            className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-xs py-2 px-3 gap-1.5"
+          >
+            <ShieldCheck className="h-4 w-4 text-indigo-600" />
+            <span>Risk Scorecard</span>
+          </TabsTrigger>
 
-      {activeTab === "synthetic_omics" && (
-        <SyntheticOmicsView
-          patient={patient}
-          onRunPulse={onRunPulse}
-          isRunningPulse={isRunningPulse}
-        />
-      )}
+          <TabsTrigger
+            value="synthetic_omics"
+            className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-purple-700 data-[state=active]:shadow-xs py-2 px-3 gap-1.5"
+          >
+            <Dna className="h-4 w-4 text-purple-600" />
+            <span>Synthetic Omics Panel</span>
+          </TabsTrigger>
 
-      {activeTab === "trajectories" && (
-        <TrajectoriesView patient={patient} />
-      )}
+          <TabsTrigger
+            value="digital_twin"
+            className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-xs py-2 px-3 gap-1.5"
+          >
+            <Sliders className="h-4 w-4 text-indigo-600" />
+            <span>Digital Twin (What-If Sandbox)</span>
+          </TabsTrigger>
 
-      {activeTab === "timeline" && (
-        <TimelineNotesView
-          patient={patient}
-          onOpenAddVisit={() => setIsAddVisitOpen(true)}
-        />
-      )}
+          <TabsTrigger
+            value="trajectories"
+            className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-xs py-2 px-3 gap-1.5"
+          >
+            <TrendingUp className="h-4 w-4 text-indigo-600" />
+            <span>Longitudinal Trajectories</span>
+          </TabsTrigger>
+
+          <TabsTrigger
+            value="timeline"
+            className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-xs py-2 px-3 gap-1.5"
+          >
+            <Calendar className="h-4 w-4 text-indigo-600" />
+            <span>Encounters & Notes ({visits.length})</span>
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Tab Panels */}
+        <TabsContent value="risk" className="mt-0">
+          <RiskScorecardView
+            patient={patient}
+            onRunPulse={onRunPulse}
+            isRunningPulse={isRunningPulse}
+          />
+        </TabsContent>
+
+        <TabsContent value="synthetic_omics" className="mt-0">
+          <SyntheticOmicsView
+            patient={patient}
+            onRunPulse={onRunPulse}
+            isRunningPulse={isRunningPulse}
+          />
+        </TabsContent>
+
+        <TabsContent value="digital_twin" className="mt-0">
+          <DigitalTwinView patient={patient} />
+        </TabsContent>
+
+        <TabsContent value="trajectories" className="mt-0">
+          <TrajectoriesView patient={patient} />
+        </TabsContent>
+
+        <TabsContent value="timeline" className="mt-0">
+          <TimelineNotesView
+            patient={patient}
+            onOpenAddVisit={() => setIsAddVisitOpen(true)}
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* Modals */}
       <AddVisitModal

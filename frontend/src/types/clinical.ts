@@ -212,3 +212,22 @@ export interface ClinicalReport {
   }>;
   samd_regulatory_notice: string;
 }
+
+export interface SimulationComparison {
+  disease_name: string;
+  original_probability: number;
+  original_category: RiskCategory;
+  simulated_probability: number;
+  simulated_category: RiskCategory;
+  absolute_risk_reduction: number;
+  relative_risk_reduction_pct: number;
+}
+
+export interface SimulationResponse {
+  patient_id: string;
+  mrn: string;
+  cohort_type: CohortType;
+  interventions_applied: Record<string, number>;
+  risk_comparisons: SimulationComparison[];
+  simulated_measurements_sample: Record<string, number>;
+}
