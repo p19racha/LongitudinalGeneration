@@ -62,14 +62,20 @@ export interface Measurement {
 
 export interface MeasurementCreate {
   feature_name: string;
-  feature_category: string;
-  value: number;
+  feature_category?: string;
+  modality?: string;
+  value?: number;
+  feature_value?: number;
   unit: string;
   ref_low?: number | null;
   ref_high?: number | null;
+  reference_low?: number | null;
+  reference_high?: number | null;
   is_synthetic?: boolean;
   confidence_interval_low?: number | null;
   confidence_interval_high?: number | null;
+  confidence_lower?: number | null;
+  confidence_upper?: number | null;
 }
 
 export interface ClinicalNote {

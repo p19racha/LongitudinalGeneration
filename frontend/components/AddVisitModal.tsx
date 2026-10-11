@@ -10,9 +10,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Patient, VisitCreate, MeasurementCreate } from "@/types/clinical";
 
 interface AddVisitModalProps {
@@ -174,12 +171,16 @@ export function AddVisitModal({
       ([key, val]) => {
         const def = labDefinitions.find((d) => d.name === key);
         return {
-          feature_name: key,
+          modality: "routine_lab",
           feature_category: "routine_lab",
+          feature_name: key,
+          feature_value: val,
           value: val,
           unit: def?.unit || "",
           ref_low: def?.ref_low,
           ref_high: def?.ref_high,
+          reference_low: def?.ref_low,
+          reference_high: def?.ref_high,
           is_synthetic: false,
         };
       }
@@ -214,67 +215,59 @@ export function AddVisitModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-2xl max-h-[92vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center">
+      <DialogContent className="sm:max-w-2xl max-h-[92vh] overflow-y-auto bg-[#FFFFFF] border border-[#E9EBEF] text-[#17191C] p-6 rounded-lg">
+        <DialogHeader className="pb-3 border-b border-[#E9EBEF]">
+          <div className="flex items-center gap-2.5">
+            <div className="h-7 w-7 rounded-md bg-[#386DF4] text-white flex items-center justify-center shrink-0">
               <Plus className="h-4 w-4" />
             </div>
             <div>
-              <DialogTitle className="text-base font-bold text-slate-900">
+              <DialogTitle className="text-base font-semibold text-[#17191C]">
                 Record Clinical Encounter #{nextVisitIndex}
               </DialogTitle>
-              <DialogDescription className="text-xs text-slate-500">
-                Patient: <strong className="text-slate-800">{patient.full_name}</strong> ({patient.mrn})
+              <DialogDescription className="text-xs text-[#667085] mt-0.5">
+                Patient: <strong className="text-[#17191C]">{patient.full_name}</strong> ({patient.mrn})
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
         {/* Preset Quick Fill Buttons */}
-        <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
-          <span className="font-semibold text-slate-700 flex items-center gap-1 text-[11px]">
-            <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
+        <div className="bg-[#FAFAFB] p-2.5 rounded-md border border-[#E9EBEF] flex flex-wrap items-center justify-between gap-2 text-xs">
+          <span className="font-medium text-[#667085] flex items-center gap-1 text-[11px]">
+            <Sparkles className="h-3 w-3 text-[#386DF4]" />
             Lab Panel Presets:
           </span>
           <div className="flex flex-wrap gap-1.5">
-            <Button
+            <button
               type="button"
-              variant="outline"
-              size="sm"
               onClick={applyPresetNormal}
-              className="h-7 text-xs bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+              className="h-6 px-2 text-[11px] font-medium bg-[#FFFFFF] hover:bg-[#F6F7F9] text-[#15803D] border border-[#E9EBEF] rounded transition-colors"
             >
               Normal Panel
-            </Button>
-            <Button
+            </button>
+            <button
               type="button"
-              variant="outline"
-              size="sm"
               onClick={applyPresetMetabolic}
-              className="h-7 text-xs bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100"
+              className="h-6 px-2 text-[11px] font-medium bg-[#FFFFFF] hover:bg-[#F6F7F9] text-[#B7791F] border border-[#E9EBEF] rounded transition-colors"
             >
               High Lipids / Metabolic
-            </Button>
-            <Button
+            </button>
+            <button
               type="button"
-              variant="outline"
-              size="sm"
               onClick={applyPresetCardiac}
-              className="h-7 text-xs bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100"
+              className="h-6 px-2 text-[11px] font-medium bg-[#FFFFFF] hover:bg-[#F6F7F9] text-[#386DF4] border border-[#E9EBEF] rounded transition-colors"
             >
               Cardiovascular Alert
-            </Button>
+            </button>
             {isIcu && (
-              <Button
+              <button
                 type="button"
-                variant="outline"
-                size="sm"
                 onClick={applyPresetIcuSepsis}
-                className="h-7 text-xs bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100"
+                className="h-6 px-2 text-[11px] font-medium bg-[#FFFFFF] hover:bg-[#F6F7F9] text-[#C2414B] border border-[#E9EBEF] rounded transition-colors"
               >
                 Septic Deterioration
-              </Button>
+              </button>
             )}
           </div>
         </div>
@@ -282,61 +275,61 @@ export function AddVisitModal({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="space-y-4 text-xs pt-1">
           {error && (
-            <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg font-medium text-xs">
+            <div className="p-2.5 bg-[#C2414B]/10 border border-[#C2414B]/20 text-[#C2414B] rounded-md text-xs">
               {error}
             </div>
           )}
 
           {/* Timing */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700">Encounter Date</label>
-              <Input
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="font-medium text-[#17191C]">Encounter Date</label>
+              <input
                 type="date"
                 value={visitDate}
                 onChange={(e) => setVisitDate(e.target.value)}
                 required
-                className="text-xs"
+                className="w-full h-8 px-2.5 bg-[#FFFFFF] border border-[#E9EBEF] rounded-md text-xs text-[#17191C] focus:border-[#386DF4] outline-none"
               />
             </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700">
+            <div className="space-y-1">
+              <label className="font-medium text-[#17191C]">
                 Hours from Baseline (h)
               </label>
-              <Input
+              <input
                 type="number"
                 step="any"
                 value={hoursFromBaseline}
                 onChange={(e) => setHoursFromBaseline(Number(e.target.value))}
                 required
-                className="text-xs font-mono"
+                className="w-full h-8 px-2.5 bg-[#FFFFFF] border border-[#E9EBEF] rounded-md font-mono text-xs text-[#17191C] focus:border-[#386DF4] outline-none"
               />
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="font-bold text-slate-700">Encounter Summary</label>
-            <Input
+          <div className="space-y-1">
+            <label className="font-medium text-[#17191C]">Encounter Summary</label>
+            <input
               value={visitSummary}
               onChange={(e) => setVisitSummary(e.target.value)}
               placeholder="e.g. Annual follow up, Routine metabolic monitoring..."
-              className="text-xs"
+              className="w-full h-8 px-2.5 bg-[#FFFFFF] border border-[#E9EBEF] rounded-md text-xs text-[#17191C] focus:border-[#386DF4] outline-none"
             />
           </div>
 
           {/* Lab Entry Wizard Grid */}
-          <div className="space-y-2 pt-2 border-t border-slate-100">
+          <div className="space-y-2 pt-2 border-t border-[#E9EBEF]">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-slate-800 flex items-center gap-1.5 text-xs">
-                <Activity className="h-4 w-4 text-indigo-600" />
-                Laboratory Test Entries ({Object.keys(measurements).length} filled)
+              <span className="font-medium text-[#17191C] flex items-center gap-1.5 text-xs">
+                <Activity className="h-3.5 w-3.5 text-[#386DF4]" />
+                Laboratory Test Entries ({Object.keys(measurements).length} recorded)
               </span>
-              <span className="text-[11px] text-slate-400">
+              <span className="text-[11px] text-[#98A2B3]">
                 Leave blank for unobserved markers
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto p-1 border border-slate-200 rounded-lg">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto p-1 border border-[#E9EBEF] rounded-md bg-[#FAFAFB]">
               {labDefinitions.map((lab) => {
                 const currentVal = measurements[lab.name];
                 const isOutOfRange =
@@ -346,33 +339,33 @@ export function AddVisitModal({
                 return (
                   <div
                     key={lab.name}
-                    className={`p-2 rounded-md border flex flex-col justify-between transition ${
+                    className={`p-2 rounded border flex flex-col justify-between transition-colors ${
                       currentVal !== undefined
                         ? isOutOfRange
-                          ? "bg-rose-50/50 border-rose-200"
-                          : "bg-emerald-50/50 border-emerald-200"
-                        : "bg-slate-50/50 border-slate-200"
+                          ? "bg-[#C2414B]/5 border-[#C2414B]/30"
+                          : "bg-[#15803D]/5 border-[#15803D]/30"
+                        : "bg-[#FFFFFF] border-[#E9EBEF]"
                     }`}
                   >
                     <div className="flex justify-between items-baseline mb-1">
-                      <span className="font-bold text-slate-800 text-[11px]">
+                      <span className="font-medium text-[#17191C] text-[11px]">
                         {lab.label}
                       </span>
-                      <span className="text-[10px] text-slate-400 font-mono">
+                      <span className="text-[10px] text-[#98A2B3] font-mono">
                         [{lab.ref_low}–{lab.ref_high}]
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Input
+                      <input
                         type="number"
                         step="any"
                         placeholder="Not tested"
                         value={currentVal !== undefined ? currentVal : ""}
                         onChange={(e) => handleInputChange(lab.name, e.target.value)}
-                        className="h-7 text-xs font-mono bg-white"
+                        className="h-6 px-2 text-xs font-mono bg-white border border-[#E9EBEF] rounded w-full focus:border-[#386DF4] outline-none"
                       />
-                      <span className="text-[10px] text-slate-500 font-medium w-12 shrink-0">
+                      <span className="text-[10px] text-[#667085] font-medium w-12 shrink-0">
                         {lab.unit}
                       </span>
                     </div>
@@ -383,9 +376,9 @@ export function AddVisitModal({
           </div>
 
           {/* Narrative Note */}
-          <div className="space-y-1.5 pt-2 border-t border-slate-100">
-            <label className="font-bold text-slate-700 flex items-center gap-1.5">
-              <FileText className="h-3.5 w-3.5 text-indigo-600" />
+          <div className="space-y-1 pt-2 border-t border-[#E9EBEF]">
+            <label className="font-medium text-[#17191C] flex items-center gap-1.5">
+              <FileText className="h-3.5 w-3.5 text-[#386DF4]" />
               Clinical Narrative Progress Note (Optional)
             </label>
             <textarea
@@ -393,22 +386,26 @@ export function AddVisitModal({
               placeholder="Enter physician assessment, nursing notes, or care plan..."
               value={noteText}
               onChange={(e) => setNoteText(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 rounded-md p-2 text-xs text-slate-800 focus:ring-2 focus:ring-indigo-500"
+              className="w-full bg-[#FFFFFF] border border-[#E9EBEF] rounded-md p-2.5 text-xs text-[#17191C] focus:border-[#386DF4] outline-none resize-none"
             />
           </div>
 
-          <DialogFooter className="pt-3">
-            <Button type="button" variant="outline" size="sm" onClick={onClose} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              size="sm"
+          <DialogFooter className="pt-3 border-t border-[#E9EBEF] flex items-center justify-between">
+            <button
+              type="button"
+              onClick={onClose}
               disabled={isSubmitting}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+              className="h-8 px-3 text-xs font-medium text-[#667085] hover:text-[#17191C] bg-[#FFFFFF] hover:bg-[#F6F7F9] border border-[#E9EBEF] rounded-md transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="h-8 px-3.5 bg-[#386DF4] hover:bg-[#2F5ECC] disabled:opacity-50 text-white rounded-md text-xs font-semibold shadow-xs transition"
             >
               {isSubmitting ? "Saving Encounter..." : "Save Encounter & Labs"}
-            </Button>
+            </button>
           </DialogFooter>
         </form>
       </DialogContent>

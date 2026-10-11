@@ -3,7 +3,7 @@ Pydantic schemas for measurement data.
 """
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, ConfigDict, computed_field
+from pydantic import BaseModel, ConfigDict, computed_field, model_validator
 
 
 class MeasurementBase(BaseModel):
@@ -16,6 +16,30 @@ class MeasurementBase(BaseModel):
     reference_high: Optional[float] = None
     confidence_lower: Optional[float] = None
     confidence_upper: Optional[float] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def handle_client_aliases(cls, data):
+        if isinstance(data, dict):
+            # map feature_category -> modality
+            if "modality" not in data and "feature_category" in data:
+                data["modality"] = data["feature_category"]
+            # map value -> feature_value
+            if "feature_value" not in data and "value" in data:
+                data["feature_value"] = data["value"]
+            # map ref_low -> reference_low
+            if "reference_low" not in data and "ref_low" in data:
+                data["reference_low"] = data["ref_low"]
+            # map ref_high -> reference_high
+            if "reference_high" not in data and "ref_high" in data:
+                data["reference_high"] = data["ref_high"]
+            # map confidence_interval_low -> confidence_lower
+            if "confidence_lower" not in data and "confidence_interval_low" in data:
+                data["confidence_lower"] = data["confidence_interval_low"]
+            # map confidence_interval_high -> confidence_upper
+            if "confidence_upper" not in data and "confidence_interval_high" in data:
+                data["confidence_upper"] = data["confidence_interval_high"]
+        return data
 
 
 class MeasurementCreate(MeasurementBase):
