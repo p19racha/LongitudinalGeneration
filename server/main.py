@@ -43,7 +43,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS configuration - supports credentials with regex for localhost and 127.0.0.1 on any port
+# CORS configuration - supports credentials with regex for localhost, 127.0.0.1, and Tauri webview origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -51,8 +51,11 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
+        "http://tauri.localhost",
+        "https://tauri.localhost",
+        "tauri://localhost",
     ],
-    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:[0-9]+)?",
+    allow_origin_regex=r"(https?://(localhost|127\.0\.0\.1|tauri\.localhost)(:[0-9]+)?|tauri://.*)",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

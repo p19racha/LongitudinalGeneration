@@ -29,32 +29,41 @@ import {
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
+async function request<T>(path: string, options?: RequestInit, retries = 2): Promise<T> {
   const url = `${API_BASE_URL}${path}`;
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
-  });
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+      },
+    });
 
-  if (!response.ok) {
-    let errorDetail = `HTTP ${response.status}: ${response.statusText}`;
-    try {
-      const errJson = await response.json();
-      if (errJson && errJson.detail) {
-        errorDetail = typeof errJson.detail === "string"
-          ? errJson.detail
-          : JSON.stringify(errJson.detail);
+    if (!response.ok) {
+      let errorDetail = `HTTP ${response.status}: ${response.statusText}`;
+      try {
+        const errJson = await response.json();
+        if (errJson && errJson.detail) {
+          errorDetail = typeof errJson.detail === "string"
+            ? errJson.detail
+            : JSON.stringify(errJson.detail);
+        }
+      } catch {
+        // ignore json parse error
       }
-    } catch {
-      // ignore json parse error
+      throw new Error(errorDetail);
     }
-    throw new Error(errorDetail);
-  }
 
-  return response.json();
+    return response.json();
+  } catch (err) {
+    if (retries > 0 && err instanceof TypeError) {
+      // Backend may be initializing during application launch; wait and retry
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      return request<T>(path, options, retries - 1);
+    }
+    throw err;
+  }
 }
 
 export const api = {
