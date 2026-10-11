@@ -167,7 +167,7 @@ class PulseModel(nn.Module):
                 for tensor in visit.values():
                     if tensor is not None:
                         return tensor.shape[0], tensor.device
-        raise ValueError("Unable to infer batch size/device because all modalities are missing.")
+        return 1, torch.device("cpu")
 
     def encode_visit(
         self,

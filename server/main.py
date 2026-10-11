@@ -2,13 +2,17 @@
 FastAPI application entrypoint for PULSE Clinical Decision Support System.
 """
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+import logging
 
 from server.config import settings
 from server.db.session import init_db, SessionLocal
 from server.demo_data.seed_data import seed_database
 from server.api.api import api_router
+
+logger = logging.getLogger("server.main")
 
 
 @asynccontextmanager
@@ -39,14 +43,33 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS configuration
+# CORS configuration - supports credentials with regex for localhost and 127.0.0.1 on any port
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins for local/clinical frontend development
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ],
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:[0-9]+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error("Unhandled server exception: %s", exc, exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc)},
+        headers={
+            "Access-Control-Allow-Origin": request.headers.get("origin", "*"),
+            "Access-Control-Allow-Credentials": "true",
+        },
+    )
 
 
 @app.get("/health", tags=["Health"])

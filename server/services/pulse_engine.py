@@ -103,6 +103,65 @@ class PulseInferenceService:
         mean, std = self.scalers[modality].get(feature_name, (0.0, 1.0))
         return norm_value * std + mean
 
+    def _canonicalize_feature_name(self, modality: str, name: str) -> str:
+        cleaned = name.lower().replace("-", "_").replace(" ", "_").strip()
+        keys = (
+            self.lab_keys
+            if modality == "routine_labs"
+            else (self.metab_keys if modality == "metabolomics" else self.prot_keys)
+        )
+        for k in keys:
+            if k.lower().replace("-", "_").replace(" ", "_") == cleaned:
+                return k
+        alias_map = {
+            "glucose": "Glucose_Fasting",
+            "fasting_glucose": "Glucose_Fasting",
+            "glucose_fasting": "Glucose_Fasting",
+            "cholesterol": "Cholesterol_Total",
+            "total_cholesterol": "Cholesterol_Total",
+            "cholesterol_total": "Cholesterol_Total",
+            "ldl": "LDL_Cholesterol",
+            "ldl_cholesterol": "LDL_Cholesterol",
+            "hdl": "HDL_Cholesterol",
+            "hdl_cholesterol": "HDL_Cholesterol",
+            "tg": "Triglycerides",
+            "triglycerides": "Triglycerides",
+            "crp": "hsCRP",
+            "crp_hs": "hsCRP",
+            "hscrp": "hsCRP",
+            "nfl": "NEFL_NfL",
+            "nefl": "NEFL_NfL",
+            "nefl_nfl": "NEFL_NfL",
+            "troponin": "Troponin_T_hs",
+            "troponin_t": "Troponin_T_hs",
+            "hs_ctnt": "Troponin_T_hs",
+            "troponin_t_hs": "Troponin_T_hs",
+            "ntprobnp": "NT_proBNP",
+            "nt_probnp": "NT_proBNP",
+            "bun": "BUN",
+            "map": "MAP",
+            "pao2_fio2": "PaO2_FiO2",
+            "alt": "ALT",
+            "ast": "AST",
+            "wbc": "WBC",
+            "platelets": "Platelets",
+            "creatinine": "Creatinine",
+            "lactate": "Lactate",
+            "albumin": "Albumin",
+            "tsh": "TSH",
+            "vitamin_b12": "Vitamin_B12",
+            "homocysteine": "Homocysteine",
+            "hba1c": "HbA1c",
+            "gfap": "GFAP",
+            "gdf15": "GDF15",
+            "cystatin_c": "Cystatin_C",
+        }
+        if cleaned in alias_map:
+            mapped = alias_map[cleaned]
+            if mapped in keys:
+                return mapped
+        return name
+
     def prepare_patient_tensors(
         self, visits: List[Visit]
     ) -> Tuple[
@@ -124,8 +183,21 @@ class PulseInferenceService:
                 "proteomics": {},
             }
             for m in visit.measurements:
-                if not m.is_synthetic and m.modality in visit_dict:
-                    visit_dict[m.modality][m.feature_name] = m.feature_value
+                if m.is_synthetic:
+                    continue
+                mod_str = (m.modality or "").lower().strip()
+                if mod_str in ("routine_lab", "routine_labs", "labs", "routine"):
+                    target_mod = "routine_labs"
+                elif mod_str in ("metabolomics", "metabolite", "metabolites"):
+                    target_mod = "metabolomics"
+                elif mod_str in ("proteomics", "protein", "proteins"):
+                    target_mod = "proteomics"
+                else:
+                    target_mod = mod_str
+
+                if target_mod in visit_dict:
+                    canon_key = self._canonicalize_feature_name(target_mod, m.feature_name)
+                    visit_dict[target_mod][canon_key] = m.feature_value
 
             raw_measurement_maps.append(visit_dict)
 
