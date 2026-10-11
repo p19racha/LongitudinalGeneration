@@ -58,6 +58,6 @@ jobs:
           tagName: v__VERSION__
           releaseName: "PULSE CDSS v__VERSION__"
           releaseBody: "Automated multi-platform standalone release for PULSE Clinical Decision Support System."
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
