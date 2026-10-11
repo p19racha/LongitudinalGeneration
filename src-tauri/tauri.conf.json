@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "PULSE-CDSS",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "identifier": "com.pulse.cdss",
   "build": {
     "frontendDist": "../frontend/out",
@@ -12,13 +12,16 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "PULSE - Clinical Decision Support System",
         "width": 1360,
         "height": 860,
         "minWidth": 1024,
         "minHeight": 680,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "visible": true,
+        "center": true
       }
     ],
     "security": {

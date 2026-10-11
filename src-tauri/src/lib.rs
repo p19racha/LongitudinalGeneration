@@ -5,6 +5,12 @@ use std::sync::Mutex;
 use std::thread;
 use std::time::Duration;
 
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
 static BACKEND_CHILD: Mutex<Option<Child>> = Mutex::new(None);
 
 fn is_port_open(port: u16) -> bool {
@@ -53,7 +59,7 @@ fn find_project_root() -> Option<PathBuf> {
         }
     }
 
-    // 5. Hardcoded fallback for user's repository path
+    // 5. Hardcoded fallback for user's repository path on Linux
     let default_repo = PathBuf::from("/home/racha/LongitudinalGeneration");
     if default_repo.join("server/main.py").exists() {
         return Some(default_repo);
@@ -62,11 +68,11 @@ fn find_project_root() -> Option<PathBuf> {
     None
 }
 
-fn find_python_binary(project_root: Option<&Path>) -> String {
+fn find_python_binary(project_root: Option<&Path>) -> Option<String> {
     // 1. Check PULSE_PYTHON env var
     if let Ok(py) = std::env::var("PULSE_PYTHON") {
         if Path::new(&py).exists() {
-            return py;
+            return Some(py);
         }
     }
 
@@ -74,25 +80,29 @@ fn find_python_binary(project_root: Option<&Path>) -> String {
     if let Some(root) = project_root {
         let venv_py_unix = root.join(".venv/bin/python");
         if venv_py_unix.exists() {
-            return venv_py_unix.to_string_lossy().to_string();
+            return Some(venv_py_unix.to_string_lossy().to_string());
         }
         let venv_py_win = root.join(".venv/Scripts/python.exe");
         if venv_py_win.exists() {
-            return venv_py_win.to_string_lossy().to_string();
+            return Some(venv_py_win.to_string_lossy().to_string());
         }
     }
 
-    // 3. Hardcoded user environment fallback
+    // 3. Hardcoded user environment fallback on Linux
     let default_venv = PathBuf::from("/home/racha/LongitudinalGeneration/.venv/bin/python");
     if default_venv.exists() {
-        return default_venv.to_string_lossy().to_string();
+        return Some(default_venv.to_string_lossy().to_string());
     }
 
-    // 4. PATH fallback
-    if cfg!(target_os = "windows") {
-        "python".to_string()
+    // 4. PATH fallback: ONLY if a valid project root exists!
+    if project_root.is_some() {
+        if cfg!(target_os = "windows") {
+            Some("python".to_string())
+        } else {
+            Some("python3".to_string())
+        }
     } else {
-        "python3".to_string()
+        None
     }
 }
 
@@ -103,7 +113,48 @@ fn start_backend_if_needed() {
     }
 
     let root_opt = find_project_root();
-    let python_bin = find_python_binary(root_opt.as_deref());
+
+    // On Windows host, if native project root was not found, check if WSL has the project backend
+    #[cfg(target_os = "windows")]
+    if root_opt.is_none() {
+        println!("[Tauri] Checking WSL for PULSE backend on Windows...");
+        let mut wsl_cmd = Command::new("wsl.exe");
+        wsl_cmd.args([
+            "--",
+            "bash",
+            "-c",
+            "if [ -f /home/racha/LongitudinalGeneration/server/main.py ]; then cd /home/racha/LongitudinalGeneration && .venv/bin/python -m uvicorn server.main:app --host 0.0.0.0 --port 8000; fi",
+        ]);
+        wsl_cmd.creation_flags(CREATE_NO_WINDOW);
+
+        match wsl_cmd.spawn() {
+            Ok(child) => {
+                if let Ok(mut guard) = BACKEND_CHILD.lock() {
+                    *guard = Some(child);
+                }
+                println!("[Tauri] WSL backend process spawned. Waiting for port 8000...");
+                for attempt in 1..=30 {
+                    thread::sleep(Duration::from_millis(300));
+                    if is_port_open(8000) {
+                        println!("[Tauri] PULSE WSL backend is ready on port 8000 (after ~{} ms).", attempt * 300);
+                        return;
+                    }
+                }
+            }
+            Err(e) => {
+                println!("[Tauri] WSL spawn skipped: {}", e);
+            }
+        }
+        return;
+    }
+
+    let python_bin = match find_python_binary(root_opt.as_deref()) {
+        Some(bin) => bin,
+        None => {
+            println!("[Tauri] No local Python backend project found. Running as client-only frontend.");
+            return;
+        }
+    };
 
     println!("[Tauri] Spawning PULSE Python backend using interpreter: {}", python_bin);
     if let Some(ref r) = root_opt {
@@ -121,14 +172,14 @@ fn start_backend_if_needed() {
         "8000",
     ]);
 
-    // CRITICAL: AppImages export PYTHONHOME, PYTHONPATH, and LD_LIBRARY_PATH which corrupt
-    // host Python virtual environments (causing ModuleNotFoundError: No module named 'encodings').
-    // We must cleanse these environment variables before invoking the host Python!
+    #[cfg(target_os = "windows")]
+    cmd.creation_flags(CREATE_NO_WINDOW);
+
+    // Cleanse environment variables exported by AppImage runtime:
     cmd.env_remove("PYTHONHOME");
     cmd.env_remove("PYTHONEXECUTABLE");
     cmd.env_remove("PYTHONNOUSERSITE");
 
-    // Cleanse LD_LIBRARY_PATH if running inside AppImage
     if std::env::var("APPDIR").is_ok() {
         if let Ok(orig_ld) = std::env::var("LD_LIBRARY_PATH_ORIG") {
             cmd.env("LD_LIBRARY_PATH", orig_ld);
@@ -151,15 +202,14 @@ fn start_backend_if_needed() {
             }
             println!("[Tauri] Backend process spawned. Waiting for server readiness on port 8000...");
 
-            // Wait up to 15 seconds for backend to bind and respond
-            for attempt in 1..=60 {
+            for attempt in 1..=40 {
                 thread::sleep(Duration::from_millis(250));
                 if is_port_open(8000) {
                     println!("[Tauri] PULSE backend is ready and listening on port 8000 (after ~{} ms).", attempt * 250);
                     return;
                 }
             }
-            eprintln!("[Tauri] Warning: PULSE backend did not respond on port 8000 within 15 seconds.");
+            eprintln!("[Tauri] Warning: PULSE backend did not respond on port 8000 within 10 seconds.");
         }
         Err(err) => {
             eprintln!("[Tauri] Failed to spawn PULSE Python backend: {}", err);
@@ -178,7 +228,11 @@ fn stop_backend() {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    start_backend_if_needed();
+    // CRITICAL: Launch backend checks in a background thread so the GUI thread is NEVER blocked.
+    // This allows the desktop window on Windows/macOS/Linux to create and display instantly.
+    thread::spawn(|| {
+        start_backend_if_needed();
+    });
 
     tauri::Builder::default()
         .setup(|app| {
