@@ -35,10 +35,14 @@ export function SyntheticOmicsView({
   });
 
   const getStatus = (m: Measurement) => {
-    if (m.ref_low != null && m.value < m.ref_low) {
+    const val = m.value !== undefined ? m.value : (m as any).feature_value;
+    const refLow = m.ref_low !== undefined ? m.ref_low : (m as any).reference_low;
+    const refHigh = m.ref_high !== undefined ? m.ref_high : (m as any).reference_high;
+
+    if (val != null && refLow != null && val < refLow) {
       return { label: "Low", color: "bg-blue-50 text-blue-700 border-blue-200" };
     }
-    if (m.ref_high != null && m.value > m.ref_high) {
+    if (val != null && refHigh != null && val > refHigh) {
       return { label: "Elevated", color: "bg-rose-50 text-rose-700 border-rose-200" };
     }
     return { label: "Normal Range", color: "bg-emerald-50 text-emerald-700 border-emerald-200" };
@@ -142,21 +146,25 @@ export function SyntheticOmicsView({
       {/* Grid of Omics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {displayedMeasurements.map((m) => {
+          const val = m.value !== undefined ? m.value : ((m as any).feature_value ?? 0);
+          const refLow = m.ref_low !== undefined ? m.ref_low : (m as any).reference_low;
+          const refHigh = m.ref_high !== undefined ? m.ref_high : (m as any).reference_high;
+          const ciLow = m.confidence_interval_low !== undefined ? m.confidence_interval_low : (m as any).confidence_lower;
+          const ciHigh = m.confidence_interval_high !== undefined ? m.confidence_interval_high : (m as any).confidence_upper;
           const status = getStatus(m);
-          const hasCi =
-            m.confidence_interval_low != null && m.confidence_interval_high != null;
+          const hasCi = ciLow != null && ciHigh != null;
           const rationale = getClinicalRationale(m.feature_name);
 
           // Calculate visual position for reference bar
-          const low = m.ref_low ?? m.value * 0.5;
-          const high = m.ref_high ?? m.value * 1.5;
+          const low = refLow ?? val * 0.5;
+          const high = refHigh ?? val * 1.5;
           const span = Math.max(high - low, 0.001);
           const minRange = Math.max(0, low - span * 0.5);
           const maxRange = high + span * 0.5;
           const totalSpan = maxRange - minRange;
           const markerPct = Math.min(
             100,
-            Math.max(0, ((m.value - minRange) / totalSpan) * 100)
+            Math.max(0, ((val - minRange) / totalSpan) * 100)
           );
           const refLowPct = Math.min(
             100,
@@ -177,7 +185,7 @@ export function SyntheticOmicsView({
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <span className="text-[10px] font-mono uppercase text-slate-400 font-semibold">
-                        {m.feature_category}
+                        {m.feature_category || (m as any).modality}
                       </span>
                       <CardTitle className="text-base font-bold text-slate-900 mt-0.5">
                         {m.feature_name.replace(/_/g, " ")}
@@ -209,7 +217,7 @@ export function SyntheticOmicsView({
                     <div>
                       <div className="flex items-baseline gap-1.5">
                         <span className="text-2xl font-black text-slate-900 font-mono">
-                          {m.value.toFixed(2)}
+                          {typeof val === "number" ? val.toFixed(2) : (val ?? "—")}
                         </span>
                         <span className="text-xs font-semibold text-slate-500">
                           {m.unit}
@@ -217,8 +225,8 @@ export function SyntheticOmicsView({
                       </div>
                       {hasCi && (
                         <div className="text-[11px] font-mono text-purple-700 font-medium mt-0.5">
-                          95% CI: [{m.confidence_interval_low?.toFixed(2)},{" "}
-                          {m.confidence_interval_high?.toFixed(2)}]
+                          95% CI: [{typeof ciLow === "number" ? ciLow.toFixed(2) : ciLow},{" "}
+                          {typeof ciHigh === "number" ? ciHigh.toFixed(2) : ciHigh}]
                         </div>
                       )}
                     </div>

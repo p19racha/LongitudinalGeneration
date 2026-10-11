@@ -1,7 +1,7 @@
 """
 Clinical Decision Support Report API endpoints.
 """
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -26,15 +26,21 @@ class ClinicalReportResponse(BaseModel):
     age: float
     sex: str
     cohort_type: str
+    history: Optional[str] = None
     total_visits: int
     baseline_date: str
     latest_visit_date: str
     latest_visit_summary: str
-    risk_summary: List[Dict[str, Any]]
-    synthesized_markers_count: int
-    measured_markers_count: int
-    action_items: List[ClinicalActionItem]
-    clinical_disclaimer: str
+    has_synthetic_omics: bool = False
+    risk_summary: List[Dict[str, Any]] = []
+    risk_scorecard: List[Dict[str, Any]] = []
+    synthesized_markers_count: int = 0
+    measured_markers_count: int = 0
+    synthesized_biomarkers: List[Dict[str, Any]] = []
+    longitudinal_summary: List[Dict[str, Any]] = []
+    action_items: List[ClinicalActionItem] = []
+    clinical_disclaimer: str = ""
+    samd_regulatory_notice: str = ""
 
 
 @router.get("/patients/{patient_id}/report", response_model=ClinicalReportResponse)
@@ -62,8 +68,9 @@ def generate_patient_clinical_report(
     synth_count = sum(1 for m in latest_visit.measurements if m.is_synthetic)
     meas_count = sum(1 for m in latest_visit.measurements if not m.is_synthetic)
 
-    # Format risk summary
+    # Format risk summary & scorecard
     risk_summary: List[Dict[str, Any]] = []
+    risk_scorecard: List[Dict[str, Any]] = []
     action_items: List[ClinicalActionItem] = []
 
     for p in latest_visit.predictions:
@@ -72,6 +79,13 @@ def generate_patient_clinical_report(
             "disease_name": p.disease_name,
             "risk_probability": p.risk_probability,
             "risk_percentage": f"{p.risk_probability * 100:.1f}%",
+            "risk_category": p.risk_category.value,
+            "top_drivers": drivers,
+        })
+        risk_scorecard.append({
+            "disease": p.disease_name,
+            "disease_name": p.disease_name,
+            "risk_percentage": round(p.risk_probability * 100, 1),
             "risk_category": p.risk_category.value,
             "top_drivers": drivers,
         })
@@ -119,6 +133,41 @@ def generate_patient_clinical_report(
             )
         )
 
+    # Synthesized deep omics biomarkers formatting
+    synthesized_biomarkers: List[Dict[str, Any]] = []
+    for m in latest_visit.measurements:
+        if m.is_synthetic:
+            ci_low = m.confidence_lower if m.confidence_lower is not None else round(m.feature_value * 0.9, 2)
+            ci_high = m.confidence_upper if m.confidence_upper is not None else round(m.feature_value * 1.1, 2)
+            ref_low = m.reference_low if m.reference_low is not None else round(m.feature_value * 0.8, 2)
+            ref_high = m.reference_high if m.reference_high is not None else round(m.feature_value * 1.2, 2)
+            status_str = "NORMAL"
+            if m.reference_high is not None and m.feature_value > m.reference_high:
+                status_str = "HIGH"
+            elif m.reference_low is not None and m.feature_value < m.reference_low:
+                status_str = "LOW"
+
+            synthesized_biomarkers.append({
+                "feature": m.feature_name,
+                "value": float(m.feature_value),
+                "unit": m.unit or "",
+                "ci_95": [float(ci_low), float(ci_high)],
+                "reference_range": [float(ref_low), float(ref_high)],
+                "status": status_str,
+            })
+
+    # Longitudinal encounters summary
+    longitudinal_summary: List[Dict[str, Any]] = []
+    for v in patient.visits:
+        longitudinal_summary.append({
+            "visit_index": v.visit_index,
+            "visit_date": v.visit_date,
+            "hours": float(v.hours_from_baseline),
+            "summary": v.visit_summary or f"Encounter #{v.visit_index}",
+            "notes_count": len(v.clinical_notes) if v.clinical_notes else 0,
+            "labs_count": len(v.measurements) if v.measurements else 0,
+        })
+
     disclaimer = (
         "IMPORTANT MEDICAL NOTICE: PULSE Decision Support Engine is an investigational software-as-a-medical-device (SaMD) tool. "
         "Synthesized molecular biomarkers (metabolomics and proteomics) represent statistical generative reconstructions inferred from "
@@ -133,13 +182,19 @@ def generate_patient_clinical_report(
         age=patient.age,
         sex=patient.sex,
         cohort_type=patient.cohort_type.value,
+        history=patient.clinical_history_summary or "",
         total_visits=len(patient.visits),
         baseline_date=baseline_visit.visit_date,
         latest_visit_date=latest_visit.visit_date,
         latest_visit_summary=latest_visit.visit_summary or "Clinical Encounter",
+        has_synthetic_omics=synth_count > 0,
         risk_summary=risk_summary,
+        risk_scorecard=risk_scorecard,
         synthesized_markers_count=synth_count,
         measured_markers_count=meas_count,
+        synthesized_biomarkers=synthesized_biomarkers,
+        longitudinal_summary=longitudinal_summary,
         action_items=action_items,
         clinical_disclaimer=disclaimer,
+        samd_regulatory_notice=disclaimer,
     )

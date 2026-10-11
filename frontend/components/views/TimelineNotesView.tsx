@@ -197,39 +197,47 @@ export function TimelineNotesView({
                               </TableRow>
                             </TableHeader>
                             <TableBody className="font-mono text-xs">
-                              {measurements.map((m) => (
-                                <TableRow key={m.id} className="hover:bg-slate-50">
-                                  <TableCell className="font-medium font-sans text-slate-800">
-                                    {m.feature_name}
-                                  </TableCell>
-                                  <TableCell className="text-slate-500 text-[11px]">
-                                    {m.feature_category}
-                                  </TableCell>
-                                  <TableCell className="font-bold text-slate-900">
-                                    {m.value.toFixed(2)} {m.unit}
-                                  </TableCell>
-                                  <TableCell>
-                                    {m.is_synthetic ? (
-                                      <Badge
-                                        variant="outline"
-                                        className="text-[10px] font-bold text-purple-700 bg-purple-50 border-purple-200"
-                                      >
-                                        Synthesized
-                                      </Badge>
-                                    ) : (
-                                      <Badge
-                                        variant="outline"
-                                        className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border-emerald-200"
-                                      >
-                                        Observed
-                                      </Badge>
-                                    )}
-                                  </TableCell>
-                                  <TableCell className="text-slate-500 text-[11px]">
-                                    {m.ref_low ?? "—"} – {m.ref_high ?? "—"}
-                                  </TableCell>
-                                </TableRow>
-                              ))}
+                              {measurements.map((m) => {
+                                const val = m.value !== undefined ? m.value : (m as any).feature_value;
+                                const displayVal = typeof val === "number" ? val.toFixed(2) : (val != null ? String(val) : "—");
+                                const category = m.feature_category || (m as any).modality || "routine_labs";
+                                const refLow = m.ref_low !== undefined ? m.ref_low : (m as any).reference_low;
+                                const refHigh = m.ref_high !== undefined ? m.ref_high : (m as any).reference_high;
+
+                                return (
+                                  <TableRow key={m.id} className="hover:bg-slate-50">
+                                    <TableCell className="font-medium font-sans text-slate-800">
+                                      {m.feature_name}
+                                    </TableCell>
+                                    <TableCell className="text-slate-500 text-[11px]">
+                                      {category}
+                                    </TableCell>
+                                    <TableCell className="font-bold text-slate-900">
+                                      {displayVal} {m.unit || ""}
+                                    </TableCell>
+                                    <TableCell>
+                                      {m.is_synthetic ? (
+                                        <Badge
+                                          variant="outline"
+                                          className="text-[10px] font-bold text-purple-700 bg-purple-50 border-purple-200"
+                                        >
+                                          Synthesized
+                                        </Badge>
+                                      ) : (
+                                        <Badge
+                                          variant="outline"
+                                          className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border-emerald-200"
+                                        >
+                                          Observed
+                                        </Badge>
+                                      )}
+                                    </TableCell>
+                                    <TableCell className="text-slate-500 text-[11px]">
+                                      {refLow ?? "—"} – {refHigh ?? "—"}
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
                             </TableBody>
                           </Table>
                         </div>
