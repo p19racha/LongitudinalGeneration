@@ -12,6 +12,7 @@ import { PatientDetailView } from "@/components/PatientDetailView";
 import { NewPatientModal } from "@/components/NewPatientModal";
 import { BatchImportModal } from "@/components/BatchImportModal";
 import { AboutResearchDialog } from "@/components/dialogs/AboutResearchDialog";
+import { LaunchModeDialog } from "@/components/dialogs/LaunchModeDialog";
 import { api } from "@/lib/api";
 import {
   Patient,
@@ -38,6 +39,7 @@ export default function Home() {
   const [isNewPatientOpen, setIsNewPatientOpen] = useState<boolean>(false);
   const [isBatchImportOpen, setIsBatchImportOpen] = useState<boolean>(false);
   const [isAboutOpen, setIsAboutOpen] = useState<boolean>(false);
+  const [isLaunchModeOpen, setIsLaunchModeOpen] = useState<boolean>(false);
 
   // Alerts & Inspector
   const [alerts, setAlerts] = useState<ClinicalAlert[]>([]);
@@ -293,6 +295,7 @@ export default function Home() {
       onOpenNewPatient={() => setIsNewPatientOpen(true)}
       onOpenBatchImport={() => setIsBatchImportOpen(true)}
       onOpenAbout={() => setIsAboutOpen(true)}
+      onOpenInBrowser={() => setIsLaunchModeOpen(true)}
       inspectorContent={inspectorContent}
       onSelectPatient={handleSelectPatient}
       onRunPulse={handleRunPulse}
@@ -486,6 +489,11 @@ export default function Home() {
       <AboutResearchDialog
         isOpen={isAboutOpen}
         onClose={() => setIsAboutOpen(false)}
+      />
+
+      <LaunchModeDialog
+        forceOpen={isLaunchModeOpen}
+        onClose={() => setIsLaunchModeOpen(false)}
       />
     </AppShell>
   );

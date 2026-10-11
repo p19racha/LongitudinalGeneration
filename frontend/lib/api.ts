@@ -212,7 +212,12 @@ export const api = {
       }),
     }),
 
-  // Health
+  // Health & System
+  openInBrowser: (): Promise<{ success: boolean; url: string }> =>
+    request<{ success: boolean; url: string }>("/api/system/open-browser", {
+      method: "POST",
+    }),
+
   checkHealth: (): Promise<{ status: string; service: string }> =>
     request<{ status: string; service: string }>("/health"),
 };

@@ -91,6 +91,27 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 app.include_router(cds_hooks_router)
 
 
+@app.post("/api/system/open-browser")
+def open_browser():
+    """Launch the user's default web browser pointing to the application."""
+    import webbrowser
+    url = "http://localhost:8000"
+    try:
+        webbrowser.open(url)
+        return {"success": True, "url": url}
+    except Exception as e:
+        return {"success": False, "error": str(e), "url": url}
+
+
+# Mount compiled static frontend if available
+import os
+from fastapi.staticfiles import StaticFiles
+
+_frontend_out_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "out")
+if os.path.exists(_frontend_out_dir):
+    app.mount("/", StaticFiles(directory=_frontend_out_dir, html=True), name="frontend_static")
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("server.main:app", host="0.0.0.0", port=8000, reload=True)

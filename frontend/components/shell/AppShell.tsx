@@ -22,6 +22,7 @@ interface AppShellProps {
   onOpenNewPatient: () => void;
   onOpenBatchImport: () => void;
   onOpenAbout: () => void;
+  onOpenInBrowser?: () => void;
   inspectorContent: InspectorContent;
   onSelectPatient?: (id: string) => void;
   onRunPulse?: (id: string) => void;
@@ -44,6 +45,7 @@ export function AppShell({
   onOpenNewPatient,
   onOpenBatchImport,
   onOpenAbout,
+  onOpenInBrowser,
   inspectorContent,
   onSelectPatient,
   onRunPulse,
@@ -89,6 +91,7 @@ export function AppShell({
           onToggleInspector={() => setInspectorOpen((prev) => !prev)}
           onOpenNewPatient={onOpenNewPatient}
           onOpenBatchImport={onOpenBatchImport}
+          onOpenInBrowser={onOpenInBrowser}
           showCohortFilter={showCohortFilter}
         />
 

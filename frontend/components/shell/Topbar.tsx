@@ -9,6 +9,7 @@ import {
   PanelRight,
   UploadCloud,
   Layers,
+  Globe,
 } from "lucide-react";
 import { CohortType } from "@/types/clinical";
 
@@ -24,6 +25,7 @@ interface TopbarProps {
   onToggleInspector: () => void;
   onOpenNewPatient: () => void;
   onOpenBatchImport: () => void;
+  onOpenInBrowser?: () => void;
   showCohortFilter?: boolean;
 }
 
@@ -39,6 +41,7 @@ export function Topbar({
   onToggleInspector,
   onOpenNewPatient,
   onOpenBatchImport,
+  onOpenInBrowser,
   showCohortFilter = true,
 }: TopbarProps) {
   return (
@@ -100,6 +103,17 @@ export function Topbar({
 
       {/* Right: Actions, Alerts, Inspector Toggle */}
       <div className="flex items-center gap-2 shrink-0">
+        {onOpenInBrowser && (
+          <button
+            onClick={onOpenInBrowser}
+            title="Open application in default web browser"
+            className="hidden sm:flex items-center gap-1.5 h-8 px-2.5 text-[12px] font-medium text-[#667085] hover:text-[#17191C] bg-[#FFFFFF] hover:bg-[#F6F7F9] border border-[#E9EBEF] rounded-md transition-colors"
+          >
+            <Globe className="h-3.5 w-3.5 text-[#386DF4]" />
+            <span>Web Mode</span>
+          </button>
+        )}
+
         <button
           onClick={onOpenBatchImport}
           title="Import EHR Records via CSV"
