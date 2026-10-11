@@ -17,6 +17,9 @@ import {
   SimulationResponse,
   CopilotQueryResponse,
   SBARReport,
+  CohortOverviewResponse,
+  TriageRadarResponse,
+  BatchImportResult,
 } from "@/types/clinical";
 
 const API_BASE_URL =
@@ -151,6 +154,25 @@ export const api = {
 
   getSBAR: (patientId: string): Promise<SBARReport> =>
     request<SBARReport>(`/api/patients/${patientId}/sbar`),
+
+  // Population Health Analytics & Triage Radar
+  getCohortOverview: (): Promise<CohortOverviewResponse> =>
+    request<CohortOverviewResponse>("/api/analytics/overview"),
+
+  getTriageRadar: (): Promise<TriageRadarResponse> =>
+    request<TriageRadarResponse>("/api/analytics/triage-radar"),
+
+  importCsv: (
+    csvContent: string,
+    autoRunPulse: boolean = true
+  ): Promise<BatchImportResult> =>
+    request<BatchImportResult>("/api/analytics/import-csv", {
+      method: "POST",
+      body: JSON.stringify({
+        csv_content: csvContent,
+        auto_run_pulse: autoRunPulse,
+      }),
+    }),
 
   // Health
   checkHealth: (): Promise<{ status: string; service: string }> =>

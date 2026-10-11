@@ -10,6 +10,7 @@ from server.api.routes import (
     reports_router,
     exports_router,
     copilot_router,
+    analytics_router,
 )
 
 api_router = APIRouter()
@@ -21,3 +22,4 @@ api_router.include_router(pulse_router)
 api_router.include_router(reports_router)
 api_router.include_router(exports_router)
 api_router.include_router(copilot_router)
+api_router.include_router(analytics_router)

@@ -255,3 +255,44 @@ export interface CopilotQueryResponse {
   sbar?: SBARReport | null;
   suggested_followups: string[];
 }
+
+export interface CohortOverviewResponse {
+  total_patients: number;
+  outpatient_count: number;
+  icu_count: number;
+  risk_distribution: Record<string, number>;
+  average_encounters_per_patient: number;
+  total_measurements: number;
+  synthetic_omics_count: number;
+  omics_synthesis_rate_pct: number;
+  prevalent_high_risk_diseases: Array<{ disease: string; count: number }>;
+}
+
+export interface TriageItem {
+  patient_id: string;
+  mrn: string;
+  full_name: string;
+  cohort_type: string;
+  latest_risk_score: number;
+  latest_risk_category: string;
+  primary_disease: string;
+  risk_velocity: number;
+  velocity_direction: string;
+  is_urgent: boolean;
+  latest_visit_date?: string | null;
+  total_visits: number;
+}
+
+export interface TriageRadarResponse {
+  total_patients_analyzed: number;
+  urgent_count: number;
+  triage_queue: TriageItem[];
+}
+
+export interface BatchImportResult {
+  patients_created: number;
+  visits_created: number;
+  measurements_created: number;
+  pulse_runs_triggered: number;
+  errors: string[];
+}

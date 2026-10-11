@@ -238,6 +238,25 @@ The database stores both structured raw clinical inputs and PULSE-inferred laten
 - [x] Automated test suite verifying Co-Pilot explainability and SBAR generation (`tests/test_phase7_copilot.py` - 27/27 total tests passed across all phases).
 - [x] **Push to Git**.
 
+### Phase 8: Population Health Analytics, Clinical Triage Radar & Batch Ingestion Pipeline (Completed)
+- [x] Population Health Analytics Service (`server/services/analytics_service.py`):
+  - Cohort-level stratification (Critical, High, Moderate, Low risk) across chronic outpatient and acute ICU cohorts.
+  - Risk Velocity Calculator (tracking the longitudinal rate of change $\Delta R / \Delta t$ across encounters to identify rapid clinical deterioration).
+  - Triage Radar engine rank-ordering patients needing urgent clinical intervention.
+  - CSV lab data batch ingestion pipeline with automatic biomarker column mapping (`COLUMN_ALIASES`).
+- [x] Analytics REST API Endpoints (`server/api/routes/analytics.py`):
+  - `GET /api/analytics/overview`: Macro hospital population metrics and risk distributions.
+  - `GET /api/analytics/triage-radar`: Prioritized clinical triage queue sorted by risk velocity.
+  - `POST /api/analytics/import-csv`: Batch ingestion of multi-patient laboratory records with auto-synthesis option.
+- [x] Clinical Frontend Population Health Dashboard (`CohortAnalyticsView.tsx`) & Ingestion Wizard (`BatchImportModal.tsx`):
+  - Strictly built with official **shadcn UI** components (`Card`, `Table`, `Badge`, `Button`, `Progress`, `Dialog`).
+  - Macro population health statistics cards, risk distribution progress bars, and interactive Triage Radar queue with direct dossier linking.
+  - Drag-and-drop CSV batch import modal with template presets (Outpatient Omics and ICU Sepsis) and auto-synthesis options.
+  - Global navigation toggle between Patient Registry and Population Health / Triage Radar in `Header.tsx`.
+- [x] Automated Test Suite (`tests/test_phase8_analytics.py`):
+  - Unit and integration tests for population metrics, triage velocity sorting, and CSV batch parsing (31/31 tests passing across all 8 phases).
+- [x] Full build verification (`npm run build`, `npm run typecheck`) and Git push to `origin main`.
+
 ---
 
 ## 4. Technology Stack Specification

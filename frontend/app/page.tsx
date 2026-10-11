@@ -5,6 +5,8 @@ import { Header } from "@/components/Header";
 import { PatientDirectory } from "@/components/PatientDirectory";
 import { PatientDetailView } from "@/components/PatientDetailView";
 import { NewPatientModal } from "@/components/NewPatientModal";
+import { BatchImportModal } from "@/components/BatchImportModal";
+import { CohortAnalyticsView } from "@/components/views/CohortAnalyticsView";
 import { api } from "@/lib/api";
 import { Patient, CohortType, PatientCreate, VisitCreate } from "@/types/clinical";
 import { Sparkles, CheckCircle2, AlertCircle, X, ExternalLink } from "lucide-react";
@@ -13,11 +15,13 @@ export default function Home() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [activeView, setActiveView] = useState<"registry" | "analytics">("registry");
   const [cohortFilter, setCohortFilter] = useState<CohortType | "ALL">("ALL");
   const [isApiHealthy, setIsApiHealthy] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRunningPulse, setIsRunningPulse] = useState<boolean>(false);
   const [isNewPatientOpen, setIsNewPatientOpen] = useState<boolean>(false);
+  const [isBatchImportOpen, setIsBatchImportOpen] = useState<boolean>(false);
   const [banner, setBanner] = useState<{
     type: "success" | "error" | "info";
     message: string;
@@ -65,9 +69,10 @@ export default function Home() {
     refreshSelectedPatient();
   }, [refreshSelectedPatient]);
 
-  // Handler: Select a patient from directory
+  // Handler: Select a patient from directory or triage radar
   const handleSelectPatient = (patientId: string) => {
     setSelectedPatientId(patientId);
+    setActiveView("registry");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -107,6 +112,7 @@ export default function Home() {
     const newPatient = await api.createPatient(data);
     await refreshPatientsList();
     setSelectedPatientId(newPatient.id);
+    setActiveView("registry");
     setBanner({
       type: "success",
       message: `Enrolled new patient: ${newPatient.full_name} (${newPatient.mrn}). You can now record clinical visits or test presets.`,
@@ -137,13 +143,31 @@ export default function Home() {
     });
   };
 
+  // Handler: Batch CSV Import success
+  const handleBatchImportSuccess = async () => {
+    await refreshPatientsList();
+    setBanner({
+      type: "success",
+      message: "Batch electronic health record import complete. Patient cohorts and longitudinal visits have been synchronized.",
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50/60 text-slate-900">
       {/* Top Navigation Bar */}
       <Header
+        currentView={activeView}
+        onViewChange={(view) => {
+          setActiveView(view);
+          if (view === "analytics") {
+            setSelectedPatient(null);
+            setSelectedPatientId(null);
+          }
+        }}
         cohortFilter={cohortFilter}
         onCohortFilterChange={setCohortFilter}
         onOpenNewPatient={() => setIsNewPatientOpen(true)}
+        onOpenBatchImport={() => setIsBatchImportOpen(true)}
         isApiHealthy={isApiHealthy}
         selectedPatientName={selectedPatient?.full_name}
         onBackToDirectory={handleBackToDirectory}
@@ -183,7 +207,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* Dynamic View: Directory vs Detailed Patient Profile */}
+        {/* Dynamic View: Directory vs Detailed Patient Profile vs Population Health Analytics */}
         {selectedPatient ? (
           <PatientDetailView
             patient={selectedPatient}
@@ -192,6 +216,11 @@ export default function Home() {
             onAddVisit={handleAddVisit}
             onDeletePatient={handleDeletePatient}
             isRunningPulse={isRunningPulse}
+          />
+        ) : activeView === "analytics" ? (
+          <CohortAnalyticsView
+            onSelectPatient={handleSelectPatient}
+            onOpenBatchImport={() => setIsBatchImportOpen(true)}
           />
         ) : (
           <PatientDirectory
@@ -248,6 +277,13 @@ export default function Home() {
         isOpen={isNewPatientOpen}
         onClose={() => setIsNewPatientOpen(false)}
         onSubmit={handleCreatePatient}
+      />
+
+      {/* Batch Import Modal */}
+      <BatchImportModal
+        isOpen={isBatchImportOpen}
+        onClose={() => setIsBatchImportOpen(false)}
+        onSuccess={handleBatchImportSuccess}
       />
     </div>
   );
