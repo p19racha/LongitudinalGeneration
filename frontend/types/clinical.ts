@@ -160,9 +160,25 @@ export interface TrajectoryPoint {
   visit_date: string;
   hours_from_baseline: number;
   value: number;
+  feature_value?: number;
   is_synthetic: boolean;
   confidence_interval_low?: number | null;
   confidence_interval_high?: number | null;
+  confidence_lower?: number | null;
+  confidence_upper?: number | null;
+  reference_low?: number | null;
+  reference_high?: number | null;
+}
+
+export interface FeatureTrajectory {
+  feature_name: string;
+  display_name?: string;
+  modality?: string;
+  unit?: string | null;
+  category?: string | null;
+  reference_low?: number | null;
+  reference_high?: number | null;
+  points: TrajectoryPoint[];
 }
 
 export interface BiomarkerTrajectory {
@@ -179,7 +195,8 @@ export interface TrajectoriesResponse {
   patient_id: string;
   mrn: string;
   full_name: string;
-  cohort_type: CohortType;
+  cohort_type?: CohortType;
+  features?: FeatureTrajectory[];
   trajectories: Record<string, BiomarkerTrajectory>;
 }
 

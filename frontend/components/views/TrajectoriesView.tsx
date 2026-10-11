@@ -33,10 +33,54 @@ export function TrajectoriesView({ patient }: TrajectoriesViewProps) {
 
     api
       .getTrajectories(patient.id)
-      .then((res) => {
+      .then((res: any) => {
         if (!isMounted) return;
-        setTrajectoriesData(res);
-        const featureKeys = Object.keys(res.trajectories);
+
+        let trajMap: Record<string, BiomarkerTrajectory> = {};
+
+        // 1. If backend returned trajectories dictionary
+        if (res?.trajectories && typeof res.trajectories === "object" && Object.keys(res.trajectories).length > 0) {
+          trajMap = res.trajectories;
+        }
+        // 2. Fallback: if backend returned features list
+        else if (Array.isArray(res?.features) && res.features.length > 0) {
+          for (const f of res.features) {
+            trajMap[f.feature_name] = {
+              feature_name: f.feature_name,
+              feature_category: f.modality || f.category || "routine_lab",
+              unit: f.unit || "",
+              ref_low: f.reference_low,
+              ref_high: f.reference_high,
+              description: f.display_name || f.feature_name,
+              points: (f.points || []).map((pt: any) => ({
+                visit_id: pt.visit_id,
+                visit_index: pt.visit_index,
+                visit_date: pt.visit_date,
+                hours_from_baseline: pt.hours_from_baseline ?? 0,
+                value: typeof pt.value === "number" ? pt.value : typeof pt.feature_value === "number" ? pt.feature_value : 0,
+                feature_value: pt.feature_value,
+                is_synthetic: !!pt.is_synthetic,
+                confidence_interval_low: pt.confidence_interval_low ?? pt.confidence_lower,
+                confidence_interval_high: pt.confidence_interval_high ?? pt.confidence_upper,
+                reference_low: pt.reference_low,
+                reference_high: pt.reference_high,
+              })),
+            };
+          }
+        }
+
+        const normalized: TrajectoriesResponse = {
+          patient_id: res?.patient_id || patient.id,
+          mrn: res?.mrn || patient.mrn,
+          full_name: res?.full_name || patient.full_name,
+          cohort_type: res?.cohort_type || patient.cohort_type,
+          features: res?.features,
+          trajectories: trajMap,
+        };
+
+        setTrajectoriesData(normalized);
+
+        const featureKeys = Object.keys(trajMap);
         if (featureKeys.length > 0) {
           const priority = ["GFAP", "NT_proBNP", "cholesterol_total", "ldl_cholesterol", "lactate", "wbc"];
           const found = priority.find((k) => featureKeys.includes(k));
@@ -54,7 +98,7 @@ export function TrajectoriesView({ patient }: TrajectoriesViewProps) {
     return () => {
       isMounted = false;
     };
-  }, [patient.id]);
+  }, [patient.id, patient.mrn, patient.full_name, patient.cohort_type]);
 
   if (isLoading) {
     return (
@@ -65,7 +109,12 @@ export function TrajectoriesView({ patient }: TrajectoriesViewProps) {
     );
   }
 
-  if (error || !trajectoriesData || Object.keys(trajectoriesData.trajectories).length === 0) {
+  if (
+    error ||
+    !trajectoriesData ||
+    !trajectoriesData.trajectories ||
+    Object.keys(trajectoriesData.trajectories).length === 0
+  ) {
     return (
       <div className="p-12 border border-[#E9EBEF] rounded-lg text-center space-y-2 bg-[#FFFFFF]">
         <p className="text-sm font-semibold text-[#17191C]">No Longitudinal Trajectory Points</p>
@@ -77,17 +126,37 @@ export function TrajectoriesView({ patient }: TrajectoriesViewProps) {
   }
 
   const currentTrajectory: BiomarkerTrajectory | undefined =
-    trajectoriesData.trajectories[selectedFeature];
+    trajectoriesData.trajectories[selectedFeature] ||
+    Object.values(trajectoriesData.trajectories)[0];
 
-  const chartData = (currentTrajectory?.points || []).map((pt) => ({
-    name: pt.hours_from_baseline > 0 ? `+${pt.hours_from_baseline}h` : pt.visit_date,
-    date: pt.visit_date,
-    hours: pt.hours_from_baseline,
-    value: Number(pt.value.toFixed(2)),
-    is_synthetic: pt.is_synthetic,
-    ci_low: pt.confidence_interval_low ? Number(pt.confidence_interval_low.toFixed(2)) : undefined,
-    ci_high: pt.confidence_interval_high ? Number(pt.confidence_interval_high.toFixed(2)) : undefined,
-  }));
+  const chartData = (currentTrajectory?.points || []).map((pt) => {
+    const rawVal =
+      typeof pt.value === "number"
+        ? pt.value
+        : typeof (pt as any).feature_value === "number"
+        ? (pt as any).feature_value
+        : 0;
+
+    return {
+      name: pt.hours_from_baseline > 0 ? `+${pt.hours_from_baseline}h` : pt.visit_date,
+      date: pt.visit_date,
+      hours: pt.hours_from_baseline,
+      value: Number(rawVal.toFixed(2)),
+      is_synthetic: pt.is_synthetic,
+      ci_low:
+        pt.confidence_interval_low != null
+          ? Number(pt.confidence_interval_low.toFixed(2))
+          : pt.confidence_lower != null
+          ? Number(pt.confidence_lower.toFixed(2))
+          : undefined,
+      ci_high:
+        pt.confidence_interval_high != null
+          ? Number(pt.confidence_interval_high.toFixed(2))
+          : pt.confidence_upper != null
+          ? Number(pt.confidence_upper.toFixed(2))
+          : undefined,
+    };
+  });
 
   const firstVal = chartData.length > 0 ? chartData[0].value : 0;
   const lastVal = chartData.length > 0 ? chartData[chartData.length - 1].value : 0;

@@ -3,7 +3,7 @@ PULSE synthesis and longitudinal trajectory API endpoints.
 """
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 from sqlalchemy.orm import Session
 
 from server.db.session import get_db
@@ -52,6 +52,34 @@ class PatientTrajectoriesResponse(BaseModel):
     mrn: str
     full_name: str
     features: List[FeatureTrajectory]
+
+    @computed_field
+    @property
+    def trajectories(self) -> Dict[str, Any]:
+        res: Dict[str, Any] = {}
+        for f in self.features:
+            res[f.feature_name] = {
+                "feature_name": f.feature_name,
+                "feature_category": f.modality,
+                "unit": f.unit or "",
+                "ref_low": f.reference_low,
+                "ref_high": f.reference_high,
+                "description": f.display_name,
+                "points": [
+                    {
+                        "visit_id": p.visit_id,
+                        "visit_index": p.visit_index,
+                        "visit_date": p.visit_date,
+                        "hours_from_baseline": p.hours_from_baseline,
+                        "value": p.feature_value,
+                        "is_synthetic": p.is_synthetic,
+                        "confidence_interval_low": p.confidence_lower,
+                        "confidence_interval_high": p.confidence_upper,
+                    }
+                    for p in f.points
+                ],
+            }
+        return res
 
 
 @router.post("/patients/{patient_id}/run-pulse", response_model=RunPulseResponse)
