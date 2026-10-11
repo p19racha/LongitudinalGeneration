@@ -18,6 +18,20 @@ from server.schemas.analytics import (
     TriageRadarResponse,
     BatchImportResult,
 )
+from server.schemas.cds_hooks import (
+    CDSService,
+    CDSServicesResponse,
+    CDSHookRequest,
+    CDSCard,
+    CDSSuggestion,
+    CDSSuggestionAction,
+    CDSLink,
+    CDSSource,
+    CDSHookResponse,
+    ClinicalAlert,
+    AlertsListResponse,
+    AcknowledgeAlertPayload,
+)
 
 __all__ = [
     "MeasurementBase",
@@ -45,4 +59,16 @@ __all__ = [
     "TriageItem",
     "TriageRadarResponse",
     "BatchImportResult",
+    "CDSService",
+    "CDSServicesResponse",
+    "CDSHookRequest",
+    "CDSCard",
+    "CDSSuggestion",
+    "CDSSuggestionAction",
+    "CDSLink",
+    "CDSSource",
+    "CDSHookResponse",
+    "ClinicalAlert",
+    "AlertsListResponse",
+    "AcknowledgeAlertPayload",
 ]

@@ -296,3 +296,77 @@ export interface BatchImportResult {
   pulse_runs_triggered: number;
   errors: string[];
 }
+
+export interface CDSService {
+  hook: string;
+  title: string;
+  description: string;
+  id: string;
+  prefetch?: Record<string, string>;
+}
+
+export interface CDSSuggestionAction {
+  type: string;
+  description: string;
+  resource?: Record<string, unknown>;
+}
+
+export interface CDSSuggestion {
+  label: string;
+  uuid?: string;
+  isRecommended?: boolean;
+  actions?: CDSSuggestionAction[];
+}
+
+export interface CDSLink {
+  label: string;
+  url: string;
+  type: string;
+}
+
+export interface CDSSource {
+  label: string;
+  url?: string;
+  icon?: string;
+}
+
+export interface CDSCard {
+  uuid?: string;
+  summary: string;
+  detail?: string;
+  indicator: "info" | "warning" | "critical";
+  source: CDSSource;
+  suggestions?: CDSSuggestion[];
+  selectionBehavior?: string;
+  links?: CDSLink[];
+}
+
+export interface CDSHookResponse {
+  cards: CDSCard[];
+}
+
+export interface ClinicalAlert {
+  id: string;
+  patient_id: string;
+  mrn: string;
+  patient_name: string;
+  cohort_type: string;
+  severity: "CRITICAL" | "WARNING" | "INFO";
+  title: string;
+  message: string;
+  disease_task: string;
+  risk_score: number;
+  risk_velocity: number;
+  velocity_direction: string;
+  created_at: string;
+  is_acknowledged: boolean;
+  acknowledged_by?: string | null;
+  acknowledged_at?: string | null;
+}
+
+export interface AlertsListResponse {
+  total_alerts: number;
+  unacknowledged_count: number;
+  critical_count: number;
+  alerts: ClinicalAlert[];
+}

@@ -6,6 +6,7 @@ import { PatientDirectory } from "@/components/PatientDirectory";
 import { PatientDetailView } from "@/components/PatientDetailView";
 import { NewPatientModal } from "@/components/NewPatientModal";
 import { BatchImportModal } from "@/components/BatchImportModal";
+import { AlertsDrawer } from "@/components/AlertsDrawer";
 import { CohortAnalyticsView } from "@/components/views/CohortAnalyticsView";
 import { api } from "@/lib/api";
 import { Patient, CohortType, PatientCreate, VisitCreate } from "@/types/clinical";
@@ -22,6 +23,8 @@ export default function Home() {
   const [isRunningPulse, setIsRunningPulse] = useState<boolean>(false);
   const [isNewPatientOpen, setIsNewPatientOpen] = useState<boolean>(false);
   const [isBatchImportOpen, setIsBatchImportOpen] = useState<boolean>(false);
+  const [isAlertsOpen, setIsAlertsOpen] = useState<boolean>(false);
+  const [unacknowledgedAlertsCount, setUnacknowledgedAlertsCount] = useState<number>(0);
   const [banner, setBanner] = useState<{
     type: "success" | "error" | "info";
     message: string;
@@ -41,6 +44,16 @@ export default function Home() {
     }
   }, []);
 
+  // Refresh active clinical alerts counter
+  const refreshAlerts = useCallback(async () => {
+    try {
+      const data = await api.getAlerts();
+      setUnacknowledgedAlertsCount(data.unacknowledged_count);
+    } catch (err) {
+      console.error("Failed to refresh alerts:", err);
+    }
+  }, []);
+
   useEffect(() => {
     // Health check
     api
@@ -49,7 +62,8 @@ export default function Home() {
       .catch(() => setIsApiHealthy(false));
 
     refreshPatientsList();
-  }, [refreshPatientsList]);
+    refreshAlerts();
+  }, [refreshPatientsList, refreshAlerts]);
 
   // Load detailed patient when selected
   const refreshSelectedPatient = useCallback(async () => {
@@ -69,7 +83,7 @@ export default function Home() {
     refreshSelectedPatient();
   }, [refreshSelectedPatient]);
 
-  // Handler: Select a patient from directory or triage radar
+  // Handler: Select a patient from directory or triage radar or alert center
   const handleSelectPatient = (patientId: string) => {
     setSelectedPatientId(patientId);
     setActiveView("registry");
@@ -92,6 +106,7 @@ export default function Home() {
       const result = await api.runPulse(selectedPatientId);
       setSelectedPatient(result.patient);
       await refreshPatientsList();
+      await refreshAlerts();
       setBanner({
         type: "success",
         message: `PULSE Synthesis Complete: Imputed ${result.synthesized_measurements_count} molecular omics biomarkers and updated ${result.predictions_count} calibrated disease risk forecasts across ${result.latent_states_count} latent states.`,
@@ -113,6 +128,7 @@ export default function Home() {
     await refreshPatientsList();
     setSelectedPatientId(newPatient.id);
     setActiveView("registry");
+    await refreshAlerts();
     setBanner({
       type: "success",
       message: `Enrolled new patient: ${newPatient.full_name} (${newPatient.mrn}). You can now record clinical visits or test presets.`,
@@ -125,6 +141,7 @@ export default function Home() {
     await api.createVisit(selectedPatientId, data);
     await refreshSelectedPatient();
     await refreshPatientsList();
+    await refreshAlerts();
     setBanner({
       type: "success",
       message: `Encounter #${data.visit_index} recorded with ${data.measurements?.length || 0} lab entries. Run PULSE engine to update omics projections.`,
@@ -137,6 +154,7 @@ export default function Home() {
     setSelectedPatientId(null);
     setSelectedPatient(null);
     await refreshPatientsList();
+    await refreshAlerts();
     setBanner({
       type: "info",
       message: "Patient record and associated longitudinal data deleted.",
@@ -146,6 +164,7 @@ export default function Home() {
   // Handler: Batch CSV Import success
   const handleBatchImportSuccess = async () => {
     await refreshPatientsList();
+    await refreshAlerts();
     setBanner({
       type: "success",
       message: "Batch electronic health record import complete. Patient cohorts and longitudinal visits have been synchronized.",
@@ -168,6 +187,8 @@ export default function Home() {
         onCohortFilterChange={setCohortFilter}
         onOpenNewPatient={() => setIsNewPatientOpen(true)}
         onOpenBatchImport={() => setIsBatchImportOpen(true)}
+        onOpenAlerts={() => setIsAlertsOpen(true)}
+        unacknowledgedAlertsCount={unacknowledgedAlertsCount}
         isApiHealthy={isApiHealthy}
         selectedPatientName={selectedPatient?.full_name}
         onBackToDirectory={handleBackToDirectory}
@@ -284,6 +305,14 @@ export default function Home() {
         isOpen={isBatchImportOpen}
         onClose={() => setIsBatchImportOpen(false)}
         onSuccess={handleBatchImportSuccess}
+      />
+
+      {/* Clinical Deterioration Alert Center Drawer */}
+      <AlertsDrawer
+        isOpen={isAlertsOpen}
+        onClose={() => setIsAlertsOpen(false)}
+        onSelectPatient={handleSelectPatient}
+        onAlertsUpdated={refreshAlerts}
       />
     </div>
   );

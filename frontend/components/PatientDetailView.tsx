@@ -27,6 +27,7 @@ import { TrajectoriesView } from "@/components/views/TrajectoriesView";
 import { TimelineNotesView } from "@/components/views/TimelineNotesView";
 import { DigitalTwinView } from "@/components/views/DigitalTwinView";
 import { ClinicalCopilotView } from "@/components/views/ClinicalCopilotView";
+import { CDSCardsView } from "@/components/CDSCardsView";
 import { AddVisitModal } from "@/components/AddVisitModal";
 import { ReportModal } from "@/components/ReportModal";
 
@@ -224,6 +225,9 @@ export function PatientDetailView({
           </span>
         </div>
       </div>
+
+      {/* HL7 FHIR CDS Hooks Real-Time Decision Cards */}
+      <CDSCardsView patientId={patient.id} />
 
       {/* Official shadcn Tabs Component */}
       <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val)} className="w-full space-y-6">

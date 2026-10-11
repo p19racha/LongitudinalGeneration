@@ -7,6 +7,7 @@ from server.api.routes.reports import router as reports_router
 from server.api.routes.exports import router as exports_router
 from server.api.routes.copilot import router as copilot_router
 from server.api.routes.analytics import router as analytics_router
+from server.api.routes.cds_hooks import cds_hooks_router
 
 __all__ = [
     "features_router",
@@ -17,4 +18,5 @@ __all__ = [
     "exports_router",
     "copilot_router",
     "analytics_router",
+    "cds_hooks_router",
 ]

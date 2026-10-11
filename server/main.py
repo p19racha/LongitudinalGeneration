@@ -59,8 +59,13 @@ def health_check():
     }
 
 
+from server.api.routes.cds_hooks import cds_hooks_router
+
 # Include Master API router under /api
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+# Include CDS Hooks & Clinical Alert router
+app.include_router(cds_hooks_router)
 
 
 if __name__ == "__main__":

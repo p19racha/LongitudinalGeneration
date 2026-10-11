@@ -257,6 +257,28 @@ The database stores both structured raw clinical inputs and PULSE-inferred laten
   - Unit and integration tests for population metrics, triage velocity sorting, and CSV batch parsing (31/31 tests passing across all 8 phases).
 - [x] Full build verification (`npm run build`, `npm run typecheck`) and Git push to `origin main`.
 
+### Phase 9: HL7 FHIR CDS Hooks & Real-Time Clinical Deterioration Alert Center (Completed)
+- [x] HL7 FHIR CDS Hooks Service (`server/services/cds_hooks_service.py`):
+  - Service discovery endpoint conforming to official specification (`GET /cds-services` and `/api/cds-services`).
+  - `patient-view` hook handler returning calibrated clinical decision cards with Nature Comp Sci 2026 citations, guidance, and 1-click clinical order suggestions.
+  - `order-select` hook handler cross-referencing draft orders against synthesized deep omics profiles and acute organ function trajectories.
+- [x] Real-Time Deterioration Alert Rule Engine (`server/services/alert_service.py`):
+  - Longitudinal risk velocity evaluation ($\Delta R / \Delta t$) identifying accelerating clinical deterioration.
+  - Multi-severity alert classification (`CRITICAL`, `WARNING`, `INFO`).
+  - Clinician acknowledgment workflow with electronic signature and 21 CFR Part 11 audit logging (`record_audit_event`).
+  - Population deterioration scan endpoint (`POST /api/alerts/scan`).
+- [x] REST API Routes (`server/api/routes/cds_hooks.py`):
+  - `GET /cds-services`, `POST /cds-services/pulse-patient-view`, `POST /cds-services/pulse-order-select`.
+  - `GET /api/alerts`, `POST /api/alerts/{id}/acknowledge`, `POST /api/alerts/scan`.
+- [x] Interactive shadcn UI Frontend Components:
+  - Top navigation bar notification bell with animated unread badge counter in `Header.tsx`.
+  - Hospital-wide Clinical Alert Center drawer (`AlertsDrawer.tsx`) with severity filtering, attending clinician review signatures, and instant patient dossier navigation.
+  - Real-time HL7 CDS Decision Cards view (`CDSCardsView.tsx`) embedded directly in the patient dossier (`PatientDetailView.tsx`).
+- [x] Automated Test Suite (`tests/test_phase9_cds_hooks.py`):
+  - 5 comprehensive tests verifying discovery, hook evaluation, alert lifecycles, and audit logging.
+  - 36/36 tests passing across all 9 phases (`.venv/bin/pytest tests/ -v`).
+- [x] Full build verification (`npm run build`, `npm run typecheck`) and Git push to `origin main`.
+
 ---
 
 ## 4. Technology Stack Specification

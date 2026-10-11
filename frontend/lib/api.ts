@@ -20,6 +20,10 @@ import {
   CohortOverviewResponse,
   TriageRadarResponse,
   BatchImportResult,
+  CDSService,
+  CDSHookResponse,
+  AlertsListResponse,
+  ClinicalAlert,
 } from "@/types/clinical";
 
 const API_BASE_URL =
@@ -171,6 +175,40 @@ export const api = {
       body: JSON.stringify({
         csv_content: csvContent,
         auto_run_pulse: autoRunPulse,
+      }),
+    }),
+
+  // HL7 FHIR CDS Hooks & Clinical Deterioration Alerts
+  getAlerts: (unacknowledgedOnly: boolean = false): Promise<AlertsListResponse> =>
+    request<AlertsListResponse>(`/api/alerts?unacknowledged_only=${unacknowledgedOnly}`),
+
+  acknowledgeAlert: (
+    alertId: string,
+    acknowledgedBy: string = "Attending Clinician",
+    note?: string
+  ): Promise<ClinicalAlert> =>
+    request<ClinicalAlert>(`/api/alerts/${alertId}/acknowledge`, {
+      method: "POST",
+      body: JSON.stringify({
+        acknowledged_by: acknowledgedBy,
+        note,
+      }),
+    }),
+
+  triggerAlertScan: (): Promise<AlertsListResponse> =>
+    request<AlertsListResponse>("/api/alerts/scan", {
+      method: "POST",
+    }),
+
+  getCDSServices: (): Promise<{ services: CDSService[] }> =>
+    request<{ services: CDSService[] }>("/cds-services"),
+
+  evaluatePatientViewHook: (patientId: string): Promise<CDSHookResponse> =>
+    request<CDSHookResponse>("/cds-services/pulse-patient-view", {
+      method: "POST",
+      body: JSON.stringify({
+        hook: "patient-view",
+        context: { patientId },
       }),
     }),
 

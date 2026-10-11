@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Activity, UserPlus, FileSpreadsheet, ShieldAlert, Users } from "lucide-react";
+import { Activity, UserPlus, FileSpreadsheet, ShieldAlert, Users, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CohortType } from "@/types/clinical";
@@ -13,6 +13,8 @@ interface HeaderProps {
   onCohortFilterChange: (cohort: CohortType | "ALL") => void;
   onOpenNewPatient: () => void;
   onOpenBatchImport: () => void;
+  onOpenAlerts: () => void;
+  unacknowledgedAlertsCount?: number;
   isApiHealthy: boolean;
   selectedPatientName?: string;
   onBackToDirectory?: () => void;
@@ -25,6 +27,8 @@ export function Header({
   onCohortFilterChange,
   onOpenNewPatient,
   onOpenBatchImport,
+  onOpenAlerts,
+  unacknowledgedAlertsCount = 0,
   isApiHealthy,
   selectedPatientName,
   onBackToDirectory,
@@ -149,6 +153,26 @@ export function Header({
               </button>
             </div>
           )}
+
+          {/* Deterioration Alert Bell Button */}
+          <Button
+            onClick={onOpenAlerts}
+            variant="outline"
+            size="sm"
+            className={`relative text-xs font-medium gap-1.5 shadow-2xs transition ${
+              unacknowledgedAlertsCount > 0
+                ? "bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100"
+                : "bg-white text-slate-700 hover:text-slate-900 border-slate-200"
+            }`}
+          >
+            <Bell className={`h-4 w-4 ${unacknowledgedAlertsCount > 0 ? "text-rose-600 animate-wiggle" : "text-slate-500"}`} />
+            <span className="hidden sm:inline">Alerts</span>
+            {unacknowledgedAlertsCount > 0 && (
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white shadow-xs">
+                {unacknowledgedAlertsCount}
+              </span>
+            )}
+          </Button>
 
           {/* Batch Ingest CSV */}
           <Button
