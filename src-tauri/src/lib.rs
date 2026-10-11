@@ -31,7 +31,18 @@ fn find_project_root() -> Option<PathBuf> {
         }
     }
 
-    // 3. Search upwards from executable directory
+    // 3. Search upwards from original working directory (OWD set by AppImage)
+    if let Ok(owd) = std::env::var("OWD") {
+        let mut curr = Some(Path::new(&owd));
+        while let Some(dir) = curr {
+            if dir.join("server/main.py").exists() {
+                return Some(dir.to_path_buf());
+            }
+            curr = dir.parent();
+        }
+    }
+
+    // 4. Search upwards from executable directory
     if let Ok(exe_path) = std::env::current_exe() {
         let mut curr = exe_path.parent();
         while let Some(dir) = curr {
@@ -42,7 +53,7 @@ fn find_project_root() -> Option<PathBuf> {
         }
     }
 
-    // 4. Hardcoded fallback for user's repository path
+    // 5. Hardcoded fallback for user's repository path
     let default_repo = PathBuf::from("/home/racha/LongitudinalGeneration");
     if default_repo.join("server/main.py").exists() {
         return Some(default_repo);
@@ -109,6 +120,24 @@ fn start_backend_if_needed() {
         "--port",
         "8000",
     ]);
+
+    // CRITICAL: AppImages export PYTHONHOME, PYTHONPATH, and LD_LIBRARY_PATH which corrupt
+    // host Python virtual environments (causing ModuleNotFoundError: No module named 'encodings').
+    // We must cleanse these environment variables before invoking the host Python!
+    cmd.env_remove("PYTHONHOME");
+    cmd.env_remove("PYTHONEXECUTABLE");
+    cmd.env_remove("PYTHONNOUSERSITE");
+
+    // Cleanse LD_LIBRARY_PATH if running inside AppImage
+    if std::env::var("APPDIR").is_ok() {
+        if let Ok(orig_ld) = std::env::var("LD_LIBRARY_PATH_ORIG") {
+            cmd.env("LD_LIBRARY_PATH", orig_ld);
+        } else if let Ok(orig_ld2) = std::env::var("ORIG_LD_LIBRARY_PATH") {
+            cmd.env("LD_LIBRARY_PATH", orig_ld2);
+        } else {
+            cmd.env_remove("LD_LIBRARY_PATH");
+        }
+    }
 
     if let Some(ref root) = root_opt {
         cmd.current_dir(root);
