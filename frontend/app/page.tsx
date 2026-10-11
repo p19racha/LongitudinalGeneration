@@ -1,36 +1,57 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Header } from "@/components/Header";
-import { PatientDirectory } from "@/components/PatientDirectory";
+import { AppShell } from "@/components/shell/AppShell";
+import { NavItem } from "@/components/shell/Sidebar";
+import { BreadcrumbItem } from "@/components/shell/Breadcrumbs";
+import { InspectorContent } from "@/components/shell/RightInspector";
+import { OverviewView } from "@/components/views/OverviewView";
+import { PatientRegistryView } from "@/components/views/PatientRegistryView";
+import { PopulationHealthView } from "@/components/views/PopulationHealthView";
+import { ClinicalCopilotView } from "@/components/views/ClinicalCopilotView";
 import { PatientDetailView } from "@/components/PatientDetailView";
 import { NewPatientModal } from "@/components/NewPatientModal";
 import { BatchImportModal } from "@/components/BatchImportModal";
-import { AlertsDrawer } from "@/components/AlertsDrawer";
-import { CohortAnalyticsView } from "@/components/views/CohortAnalyticsView";
+import { AboutResearchDialog } from "@/components/dialogs/AboutResearchDialog";
 import { api } from "@/lib/api";
-import { Patient, CohortType, PatientCreate, VisitCreate } from "@/types/clinical";
-import { Sparkles, CheckCircle2, AlertCircle, X, ExternalLink } from "lucide-react";
+import {
+  Patient,
+  CohortType,
+  PatientCreate,
+  VisitCreate,
+  ClinicalAlert,
+  Measurement,
+} from "@/types/clinical";
+import { CheckCircle2, AlertCircle, X, Sparkles } from "lucide-react";
 
 export default function Home() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [activeView, setActiveView] = useState<"registry" | "analytics">("registry");
+  const [activeNav, setActiveNav] = useState<NavItem>("patients");
   const [cohortFilter, setCohortFilter] = useState<CohortType | "ALL">("ALL");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [isApiHealthy, setIsApiHealthy] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRunningPulse, setIsRunningPulse] = useState<boolean>(false);
+
+  // Modals
   const [isNewPatientOpen, setIsNewPatientOpen] = useState<boolean>(false);
   const [isBatchImportOpen, setIsBatchImportOpen] = useState<boolean>(false);
-  const [isAlertsOpen, setIsAlertsOpen] = useState<boolean>(false);
+  const [isAboutOpen, setIsAboutOpen] = useState<boolean>(false);
+
+  // Alerts & Inspector
+  const [alerts, setAlerts] = useState<ClinicalAlert[]>([]);
   const [unacknowledgedAlertsCount, setUnacknowledgedAlertsCount] = useState<number>(0);
+  const [inspectorContent, setInspectorContent] = useState<InspectorContent>({ type: "none" });
+
+  // Banner Notification
   const [banner, setBanner] = useState<{
     type: "success" | "error" | "info";
     message: string;
   } | null>(null);
 
-  // Load initial patients & check health
+  // Load initial patients & health
   const refreshPatientsList = useCallback(async () => {
     try {
       const data = await api.getPatients();
@@ -44,10 +65,11 @@ export default function Home() {
     }
   }, []);
 
-  // Refresh active clinical alerts counter
+  // Refresh active clinical alerts
   const refreshAlerts = useCallback(async () => {
     try {
       const data = await api.getAlerts();
+      setAlerts(data.alerts || []);
       setUnacknowledgedAlertsCount(data.unacknowledged_count);
     } catch (err) {
       console.error("Failed to refresh alerts:", err);
@@ -55,7 +77,6 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    // Health check
     api
       .checkHealth()
       .then(() => setIsApiHealthy(true))
@@ -86,7 +107,7 @@ export default function Home() {
   // Handler: Select a patient from directory or triage radar or alert center
   const handleSelectPatient = (patientId: string) => {
     setSelectedPatientId(patientId);
-    setActiveView("registry");
+    setActiveNav("patients");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -94,17 +115,22 @@ export default function Home() {
   const handleBackToDirectory = () => {
     setSelectedPatientId(null);
     setSelectedPatient(null);
+    setInspectorContent({ type: "none" });
   };
 
   // Handler: Run PULSE Engine
-  const handleRunPulse = async () => {
-    if (!selectedPatientId) return;
+  const handleRunPulse = async (patientId?: string) => {
+    const targetId = patientId || selectedPatientId;
+    if (!targetId) return;
+
     setIsRunningPulse(true);
     setBanner(null);
 
     try {
-      const result = await api.runPulse(selectedPatientId);
-      setSelectedPatient(result.patient);
+      const result = await api.runPulse(targetId);
+      if (selectedPatientId === targetId) {
+        setSelectedPatient(result.patient);
+      }
       await refreshPatientsList();
       await refreshAlerts();
       setBanner({
@@ -127,7 +153,7 @@ export default function Home() {
     const newPatient = await api.createPatient(data);
     await refreshPatientsList();
     setSelectedPatientId(newPatient.id);
-    setActiveView("registry");
+    setActiveNav("patients");
     await refreshAlerts();
     setBanner({
       type: "success",
@@ -144,7 +170,7 @@ export default function Home() {
     await refreshAlerts();
     setBanner({
       type: "success",
-      message: `Encounter #${data.visit_index} recorded with ${data.measurements?.length || 0} lab entries. Run PULSE engine to update omics projections.`,
+      message: `Encounter recorded with ${data.measurements?.length || 0} lab entries. Run PULSE engine to update omics projections.`,
     });
   };
 
@@ -153,6 +179,7 @@ export default function Home() {
     await api.deletePatient(patientId);
     setSelectedPatientId(null);
     setSelectedPatient(null);
+    setInspectorContent({ type: "none" });
     await refreshPatientsList();
     await refreshAlerts();
     setBanner({
@@ -171,149 +198,329 @@ export default function Home() {
     });
   };
 
-  return (
-    <div className="min-h-screen flex flex-col bg-slate-50/60 text-slate-900">
-      {/* Top Navigation Bar */}
-      <Header
-        currentView={activeView}
-        onViewChange={(view) => {
-          setActiveView(view);
-          if (view === "analytics") {
-            setSelectedPatient(null);
-            setSelectedPatientId(null);
-          }
-        }}
-        cohortFilter={cohortFilter}
-        onCohortFilterChange={setCohortFilter}
-        onOpenNewPatient={() => setIsNewPatientOpen(true)}
-        onOpenBatchImport={() => setIsBatchImportOpen(true)}
-        onOpenAlerts={() => setIsAlertsOpen(true)}
-        unacknowledgedAlertsCount={unacknowledgedAlertsCount}
-        isApiHealthy={isApiHealthy}
-        selectedPatientName={selectedPatient?.full_name}
-        onBackToDirectory={handleBackToDirectory}
-      />
+  // Handler: Acknowledge alert
+  const handleAcknowledgeAlert = async (alertId: string, note?: string) => {
+    try {
+      await api.acknowledgeAlert(alertId, "Attending Clinician", note);
+      await refreshAlerts();
+      setBanner({
+        type: "success",
+        message: "Clinical deterioration alert acknowledged and signed in 21 CFR Part 11 audit log.",
+      });
+    } catch (err: unknown) {
+      console.error("Failed to acknowledge alert:", err);
+    }
+  };
 
-      {/* Main App Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+  // Inspect Biomarker in side panel
+  const handleSelectBiomarker = (biomarker: Measurement) => {
+    setInspectorContent({
+      type: "biomarker",
+      biomarker,
+      patientName: selectedPatient?.full_name,
+    });
+  };
+
+  // Inspect Patient in side panel
+  const handleInspectPatient = (patient: Patient) => {
+    setInspectorContent({
+      type: "patient",
+      patient,
+    });
+  };
+
+  // Open Alerts in inspector or view
+  const handleOpenAlerts = () => {
+    setInspectorContent({
+      type: "alerts",
+      alerts,
+      onAcknowledge: handleAcknowledgeAlert,
+    });
+  };
+
+  // Build breadcrumbs dynamically
+  const breadcrumbs: BreadcrumbItem[] = [
+    {
+      label: "Workspace",
+      onClick: () => {
+        handleBackToDirectory();
+        setActiveNav("overview");
+      },
+    },
+  ];
+
+  if (activeNav === "overview") {
+    breadcrumbs.push({ label: "Clinical Overview", active: true });
+  } else if (activeNav === "analytics") {
+    breadcrumbs.push({ label: "Population Health Analytics", active: true });
+  } else if (activeNav === "alerts") {
+    breadcrumbs.push({ label: "Deterioration Alerts", active: true });
+  } else if (activeNav === "copilot") {
+    breadcrumbs.push({ label: "Clinical AI Co-Pilot", active: true });
+  } else {
+    // activeNav === "patients"
+    if (selectedPatient) {
+      breadcrumbs.push({
+        label: "Patients",
+        onClick: handleBackToDirectory,
+      });
+      breadcrumbs.push({
+        label: `${selectedPatient.full_name} (${selectedPatient.mrn})`,
+        active: true,
+      });
+    } else {
+      breadcrumbs.push({ label: "Patient Registry", active: true });
+    }
+  }
+
+  return (
+    <AppShell
+      activeNav={activeNav}
+      onNavigate={(nav) => {
+        setActiveNav(nav);
+        if (nav === "overview" || nav === "analytics") {
+          setSelectedPatientId(null);
+          setSelectedPatient(null);
+        } else if (nav === "alerts") {
+          handleOpenAlerts();
+        }
+      }}
+      breadcrumbs={breadcrumbs}
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+      cohortFilter={cohortFilter}
+      onCohortFilterChange={setCohortFilter}
+      unacknowledgedAlertsCount={unacknowledgedAlertsCount}
+      onOpenAlerts={handleOpenAlerts}
+      isApiHealthy={isApiHealthy}
+      onOpenNewPatient={() => setIsNewPatientOpen(true)}
+      onOpenBatchImport={() => setIsBatchImportOpen(true)}
+      onOpenAbout={() => setIsAboutOpen(true)}
+      inspectorContent={inspectorContent}
+      onSelectPatient={handleSelectPatient}
+      onRunPulse={handleRunPulse}
+      isRunningPulse={isRunningPulse}
+      showCohortFilter={activeNav === "patients" && !selectedPatient}
+    >
+      <div className="space-y-6">
         {/* Banner Alert Notification */}
         {banner && (
           <div
-            className={`p-4 rounded-xl border flex items-start justify-between gap-3 text-xs font-medium animate-in fade-in duration-200 ${
+            className={`p-3.5 rounded-lg border flex items-center justify-between gap-3 text-xs font-medium transition-all ${
               banner.type === "success"
-                ? "bg-emerald-50 border-emerald-200 text-emerald-900"
+                ? "bg-[#15803D]/5 border-[#15803D]/25 text-[#15803D]"
                 : banner.type === "error"
-                ? "bg-rose-50 border-rose-200 text-rose-900"
-                : "bg-indigo-50 border-indigo-200 text-indigo-900"
+                ? "bg-[#C2414B]/5 border-[#C2414B]/25 text-[#C2414B]"
+                : "bg-[#386DF4]/5 border-[#386DF4]/25 text-[#386DF4]"
             }`}
           >
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2 min-w-0">
               {banner.type === "success" && (
-                <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-[#15803D]" />
               )}
               {banner.type === "error" && (
-                <AlertCircle className="h-5 w-5 text-rose-600 shrink-0" />
+                <AlertCircle className="h-4 w-4 shrink-0 text-[#C2414B]" />
               )}
               {banner.type === "info" && (
-                <Sparkles className="h-5 w-5 text-indigo-600 shrink-0" />
+                <Sparkles className="h-4 w-4 shrink-0 text-[#386DF4]" />
               )}
-              <span>{banner.message}</span>
+              <span className="truncate">{banner.message}</span>
             </div>
             <button
               onClick={() => setBanner(null)}
-              className="text-slate-400 hover:text-slate-600 p-0.5 rounded transition"
+              className="text-[#98A2B3] hover:text-[#17191C] p-0.5 rounded transition-colors"
             >
-              <X className="h-4 w-4" />
+              <X className="h-3.5 w-3.5" />
             </button>
           </div>
         )}
 
-        {/* Dynamic View: Directory vs Detailed Patient Profile vs Population Health Analytics */}
-        {selectedPatient ? (
-          <PatientDetailView
-            patient={selectedPatient}
-            onRefreshPatient={refreshSelectedPatient}
-            onRunPulse={handleRunPulse}
-            onAddVisit={handleAddVisit}
-            onDeletePatient={handleDeletePatient}
-            isRunningPulse={isRunningPulse}
+        {/* View Router */}
+        {activeNav === "overview" && (
+          <OverviewView
+            onSelectPatient={handleSelectPatient}
+            onOpenNewPatient={() => setIsNewPatientOpen(true)}
+            onOpenBatchImport={() => setIsBatchImportOpen(true)}
+            onNavigateToPatients={() => setActiveNav("patients")}
+            onNavigateToAlerts={handleOpenAlerts}
           />
-        ) : activeView === "analytics" ? (
-          <CohortAnalyticsView
+        )}
+
+        {activeNav === "analytics" && (
+          <PopulationHealthView
             onSelectPatient={handleSelectPatient}
             onOpenBatchImport={() => setIsBatchImportOpen(true)}
           />
-        ) : (
-          <PatientDirectory
-            patients={patients}
-            selectedPatientId={selectedPatientId}
-            onSelectPatient={handleSelectPatient}
-            cohortFilter={cohortFilter}
-            isLoading={isLoading}
-          />
         )}
-      </main>
 
-      {/* Clinical Footer with Attribution */}
-      <footer className="mt-auto border-t border-slate-200 bg-white py-6 px-4 lg:px-8 text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex flex-col sm:flex-row items-center gap-2">
-            <span className="font-bold text-slate-700">PULSE CDSS</span>
-            <span className="hidden sm:inline">•</span>
-            <span>
-              Powered by the PULSE generative framework (
-              <a
-                href="https://www.nature.com/articles/s43588-026-00957-5"
-                target="_blank"
-                rel="noreferrer"
-                className="text-indigo-600 hover:underline font-medium inline-flex items-center gap-0.5"
-              >
-                Nature Computational Science 2026
-                <ExternalLink className="h-3 w-3" />
-              </a>
-              )
-            </span>
+        {activeNav === "patients" &&
+          (selectedPatient ? (
+            <PatientDetailView
+              patient={selectedPatient}
+              onRefreshPatient={refreshSelectedPatient}
+              onRunPulse={() => handleRunPulse()}
+              onAddVisit={handleAddVisit}
+              onDeletePatient={handleDeletePatient}
+              isRunningPulse={isRunningPulse}
+              onSelectBiomarker={handleSelectBiomarker}
+            />
+          ) : (
+            <PatientRegistryView
+              patients={patients}
+              selectedPatientId={selectedPatientId}
+              onSelectPatient={handleSelectPatient}
+              onInspectPatient={handleInspectPatient}
+              cohortFilter={cohortFilter}
+              onCohortFilterChange={setCohortFilter}
+              isLoading={isLoading}
+              onOpenNewPatient={() => setIsNewPatientOpen(true)}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
+          ))}
+
+        {activeNav === "alerts" && (
+          <div className="space-y-4">
+            <div className="pb-4 border-b border-[#E9EBEF]">
+              <h1 className="text-2xl font-semibold tracking-tight text-[#17191C]">
+                Clinical Deterioration Alerts
+              </h1>
+              <p className="text-xs text-[#667085] mt-1">
+                Real-time surveillance monitoring algorithmic risk score jumps and vital sign deterioration.
+              </p>
+            </div>
+
+            <div className="border border-[#E9EBEF] rounded-lg bg-[#FFFFFF] overflow-hidden">
+              <table className="w-full text-left text-xs text-[#17191C] divide-y divide-[#E9EBEF]">
+                <thead className="bg-[#FAFAFB] text-[#667085] font-medium text-[11px] uppercase tracking-wider">
+                  <tr>
+                    <th className="py-2.5 px-4">Severity</th>
+                    <th className="py-2.5 px-4">Patient & MRN</th>
+                    <th className="py-2.5 px-4">Alert Title</th>
+                    <th className="py-2.5 px-4">Predicted Risk</th>
+                    <th className="py-2.5 px-4">Velocity</th>
+                    <th className="py-2.5 px-4">Status</th>
+                    <th className="py-2.5 px-4 text-right pr-4">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E9EBEF]">
+                  {alerts.map((al) => (
+                    <tr key={al.id} className="hover:bg-[#F6F7F9] transition-colors">
+                      <td className="py-3 px-4">
+                        <span
+                          className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded font-mono ${
+                            al.severity === "CRITICAL"
+                              ? "bg-[#C2414B] text-white"
+                              : "bg-[#B7791F] text-white"
+                          }`}
+                        >
+                          {al.severity}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="font-semibold text-[#17191C]">{al.patient_name}</div>
+                        <div className="font-mono text-[11px] text-[#98A2B3]">{al.mrn}</div>
+                      </td>
+                      <td className="py-3 px-4 font-medium text-[#17191C] max-w-xs">
+                        <div>{al.title}</div>
+                        <div className="text-[11px] text-[#667085] truncate">{al.message}</div>
+                      </td>
+                      <td className="py-3 px-4 font-mono font-bold text-[13px] text-[#17191C]">
+                        {Math.round(al.risk_score * 100)}%
+                      </td>
+                      <td className="py-3 px-4 font-mono text-[11px]">
+                        <span className={al.risk_velocity > 0 ? "text-[#C2414B]" : "text-[#15803D]"}>
+                          {al.risk_velocity > 0
+                            ? `+${(al.risk_velocity * 100).toFixed(1)}%`
+                            : `${(al.risk_velocity * 100).toFixed(1)}%`}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        {al.is_acknowledged ? (
+                          <span className="text-[11px] text-[#15803D] font-medium">
+                            Acknowledged
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-[#C2414B] font-medium">
+                            Pending Review
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-right pr-4">
+                        <div className="flex items-center justify-end gap-2">
+                          {!al.is_acknowledged && (
+                            <button
+                              onClick={() => handleAcknowledgeAlert(al.id)}
+                              className="text-[11px] font-semibold text-white bg-[#17191C] hover:bg-[#386DF4] px-2.5 py-1 rounded transition-colors"
+                            >
+                              Sign & Acknowledge
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleSelectPatient(al.patient_id)}
+                            className="text-[11px] font-medium text-[#386DF4] hover:underline"
+                          >
+                            Dossier →
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
+        )}
 
-          <div className="flex items-center gap-3">
-            <span>
-              Original Author:{" "}
-              <a
-                href="https://github.com/ww20hust"
-                target="_blank"
-                rel="noreferrer"
-                className="text-indigo-600 hover:underline font-semibold"
-              >
-                Wei Wu (@ww20hust)
-              </a>
-            </span>
-            <span>•</span>
-            <span>Peking University / HUST</span>
+        {activeNav === "copilot" && (
+          <div className="space-y-4">
+            <div className="pb-4 border-b border-[#E9EBEF]">
+              <h1 className="text-2xl font-semibold tracking-tight text-[#17191C]">
+                Clinical AI Co-Pilot Console
+              </h1>
+              <p className="text-xs text-[#667085] mt-1">
+                Grounded multimodal reasoning, biomarker interpretation, and automated SBAR generation.
+              </p>
+            </div>
+
+            {selectedPatient ? (
+              <ClinicalCopilotView patient={selectedPatient} />
+            ) : (
+              <div className="p-8 border border-[#E9EBEF] rounded-lg bg-[#FFFFFF] text-center space-y-3">
+                <Sparkles className="h-8 w-8 text-[#386DF4] mx-auto" />
+                <h3 className="text-sm font-semibold text-[#17191C]">Select a Patient to Activate Co-Pilot</h3>
+                <p className="text-xs text-[#667085] max-w-sm mx-auto">
+                  The clinical co-pilot requires an active patient context to query longitudinal latent states and generate shift handovers.
+                </p>
+                <button
+                  onClick={() => setActiveNav("patients")}
+                  className="h-8 px-3.5 text-xs font-semibold text-white bg-[#386DF4] hover:bg-[#2F5ECC] rounded-md transition-colors shadow-xs"
+                >
+                  Select from Registry
+                </button>
+              </div>
+            )}
           </div>
-        </div>
-      </footer>
+        )}
+      </div>
 
-      {/* Enroll Patient Modal */}
+      {/* Modals */}
       <NewPatientModal
         isOpen={isNewPatientOpen}
         onClose={() => setIsNewPatientOpen(false)}
         onSubmit={handleCreatePatient}
       />
 
-      {/* Batch Import Modal */}
       <BatchImportModal
         isOpen={isBatchImportOpen}
         onClose={() => setIsBatchImportOpen(false)}
         onSuccess={handleBatchImportSuccess}
       />
 
-      {/* Clinical Deterioration Alert Center Drawer */}
-      <AlertsDrawer
-        isOpen={isAlertsOpen}
-        onClose={() => setIsAlertsOpen(false)}
-        onSelectPatient={handleSelectPatient}
-        onAlertsUpdated={refreshAlerts}
+      <AboutResearchDialog
+        isOpen={isAboutOpen}
+        onClose={() => setIsAboutOpen(false)}
       />
-    </div>
+    </AppShell>
   );
 }

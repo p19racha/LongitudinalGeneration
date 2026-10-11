@@ -1,19 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import { Clock, FileText, ChevronDown, ChevronRight, Activity, PlusCircle, CheckCircle2 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell,
-} from "@/components/ui/table";
-import { Patient, Visit } from "@/types/clinical";
+import React from "react";
+import { PlusCircle, Calendar, FileText, Activity, Dna, Clock } from "lucide-react";
+import { Patient } from "@/types/clinical";
 
 interface TimelineNotesViewProps {
   patient: Patient;
@@ -24,228 +13,187 @@ export function TimelineNotesView({
   patient,
   onOpenAddVisit,
 }: TimelineNotesViewProps) {
-  const [expandedVisitId, setExpandedVisitId] = useState<string | null>(
-    patient.visits.length > 0 ? patient.visits[patient.visits.length - 1].id : null
-  );
-
   const visits = patient.visits || [];
+  const sortedVisits = [...visits].sort((a, b) => b.visit_index - a.visit_index);
 
-  const toggleExpand = (id: string) => {
-    setExpandedVisitId((prev) => (prev === id ? null : id));
-  };
-
-  if (visits.length === 0) {
+  if (sortedVisits.length === 0) {
     return (
-      <div className="bg-white rounded-xl p-12 border border-slate-200 text-center space-y-4">
-        <FileText className="h-10 w-10 text-slate-300 mx-auto" />
+      <div className="bg-[#FFFFFF] rounded-lg p-12 border border-[#E9EBEF] text-center space-y-3">
+        <Calendar className="h-8 w-8 text-[#98A2B3] mx-auto stroke-[1.5]" />
         <div>
-          <h3 className="text-base font-bold text-slate-800">No Clinical Encounters Recorded</h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
-            Build this patient&apos;s longitudinal trajectory by recording routine visits, laboratory blood draws, or ICU time steps.
+          <h3 className="text-sm font-semibold text-[#17191C]">No Recorded Encounters</h3>
+          <p className="text-xs text-[#667085] max-w-sm mx-auto mt-1">
+            Log an outpatient clinical visit or ICU observation timepoint with routine blood panels.
           </p>
         </div>
-        <Button onClick={onOpenAddVisit} size="sm" className="bg-indigo-600 text-white">
-          <PlusCircle className="h-4 w-4 mr-1.5" />
-          Add First Encounter
-        </Button>
+        <button
+          onClick={onOpenAddVisit}
+          className="h-8 px-3.5 bg-[#386DF4] hover:bg-[#2F5ECC] text-white rounded-md text-xs font-semibold shadow-xs transition inline-flex items-center gap-1.5"
+        >
+          <PlusCircle className="h-3.5 w-3.5" />
+          <span>Add First Encounter</span>
+        </button>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200">
+      {/* Header Bar */}
+      <div className="flex items-center justify-between pb-3 border-b border-[#E9EBEF]">
         <div>
-          <h3 className="text-sm font-bold text-slate-900">
-            Chronological Encounters & Clinical Notes ({visits.length})
+          <h3 className="text-sm font-semibold text-[#17191C]">
+            Chronological Encounters & Clinical Notes
           </h3>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Sequential historical trajectory used as temporal prior (Z_P) by the PULSE generative engine.
+          <p className="text-xs text-[#667085]">
+            {visits.length} recorded timepoints with multimodal observations
           </p>
         </div>
-        <Button
+        <button
           onClick={onOpenAddVisit}
-          size="sm"
-          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs gap-1.5"
+          className="h-8 px-3 text-xs font-semibold text-white bg-[#386DF4] hover:bg-[#2F5ECC] rounded-md transition-colors flex items-center gap-1.5 shadow-xs"
         >
           <PlusCircle className="h-3.5 w-3.5" />
-          Add Encounter / Labs
-        </Button>
+          <span>Add Encounter</span>
+        </button>
       </div>
 
-      <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
-        {visits.map((visit, idx) => {
-          const isExpanded = visit.id === expandedVisitId;
-          const measurements = visit.measurements || [];
-          const notes = visit.clinical_notes || [];
-          const hasLatent = !!visit.latent_state;
+      {/* Encounters Timeline List */}
+      <div className="space-y-4">
+        {sortedVisits.map((v) => {
+          const notes = v.clinical_notes || [];
+          const measurements = v.measurements || [];
+          const syntheticCount = measurements.filter((m) => m.is_synthetic).length;
+          const routineCount = measurements.filter((m) => !m.is_synthetic).length;
 
           return (
-            <div key={visit.id} className="relative group">
-              {/* Timeline Dot */}
-              <div
-                className={`absolute -left-6 top-4 h-5 w-5 rounded-full border-2 bg-white flex items-center justify-center transition ${
-                  hasLatent ? "border-purple-600 text-purple-600" : "border-slate-400 text-slate-400"
-                }`}
-              >
-                <div
-                  className={`h-2 w-2 rounded-full ${
-                    hasLatent ? "bg-purple-600" : "bg-slate-400"
-                  }`}
-                />
+            <div
+              key={v.id || v.visit_index}
+              className="border border-[#E9EBEF] rounded-lg bg-[#FFFFFF] overflow-hidden"
+            >
+              {/* Encounter Header Bar */}
+              <div className="p-4 bg-[#FAFAFB] border-b border-[#E9EBEF] flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="h-6 w-6 rounded bg-[#386DF4] text-white flex items-center justify-center font-mono text-xs font-bold shrink-0">
+                    #{v.visit_index}
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sm text-[#17191C]">
+                        Encounter #{v.visit_index}
+                      </span>
+                      <span className="text-xs font-mono text-[#667085]">
+                        {v.visit_date}
+                      </span>
+                    </div>
+                    {v.hours_from_baseline > 0 && (
+                      <span className="text-[11px] font-mono text-[#98A2B3]">
+                        +{v.hours_from_baseline}h elapsed from baseline
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="px-2 py-0.5 rounded bg-[#0F766E]/10 text-[#0F766E] font-medium text-[11px]">
+                    {routineCount} Labs
+                  </span>
+                  {syntheticCount > 0 && (
+                    <span className="px-2 py-0.5 rounded bg-[#7856A8]/10 text-[#7856A8] font-medium text-[11px]">
+                      {syntheticCount} Omics
+                    </span>
+                  )}
+                </div>
               </div>
 
-              {/* Encounter Card */}
-              <Card
-                className={`border-slate-200 bg-white transition hover:border-slate-300 ${
-                  isExpanded ? "ring-1 ring-slate-300 shadow-xs" : ""
-                }`}
-              >
-                <CardHeader
-                  onClick={() => toggleExpand(visit.id)}
-                  className="cursor-pointer select-none pb-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700 font-bold text-xs font-mono">
-                        #{visit.visit_index}
-                      </div>
-                      <div>
-                        <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                          <span>{visit.visit_date}</span>
-                          <span className="text-xs font-normal text-slate-500">
-                            ({visit.hours_from_baseline > 0 ? `+${visit.hours_from_baseline}h from baseline` : "Baseline Encounter"})
-                          </span>
-                        </CardTitle>
-                        {visit.visit_summary && (
-                          <CardDescription className="text-xs text-slate-500 mt-0.5">
-                            {visit.visit_summary}
-                          </CardDescription>
-                        )}
-                      </div>
-                    </div>
+              {/* Encounter Body */}
+              <div className="p-5 space-y-4">
+                {/* Summary */}
+                {v.visit_summary && (
+                  <p className="text-xs text-[#667085] leading-relaxed bg-[#FAFAFB] p-3 rounded border border-[#E9EBEF]">
+                    {v.visit_summary}
+                  </p>
+                )}
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-medium text-slate-500">
-                        {measurements.length} Labs • {notes.length} Notes
-                      </span>
-                      {hasLatent && (
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] bg-purple-50 text-purple-700 border-purple-200"
+                {/* Clinical Notes */}
+                {notes.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#98A2B3] flex items-center gap-1.5">
+                      <FileText className="h-3.5 w-3.5" />
+                      <span>Physician Progress Notes ({notes.length})</span>
+                    </span>
+                    <div className="space-y-2">
+                      {notes.map((n) => (
+                        <div
+                          key={n.id}
+                          className="p-3 rounded bg-[#FAFAFB] border border-[#E9EBEF] text-xs space-y-1"
                         >
-                          Z_16 Encoded
-                        </Badge>
-                      )}
-                      {isExpanded ? (
-                        <ChevronDown className="h-4 w-4 text-slate-400" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4 text-slate-400" />
-                      )}
+                          <div className="flex items-center justify-between text-[11px] text-[#98A2B3] font-mono">
+                            <span className="uppercase font-semibold text-[#667085]">
+                              {n.note_type}
+                            </span>
+                            <span>{new Date(n.created_at).toLocaleString()}</span>
+                          </div>
+                          <p className="text-[#17191C] leading-relaxed">{n.note_text}</p>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </CardHeader>
-
-                {isExpanded && (
-                  <CardContent className="pt-2 border-t border-slate-100 space-y-4">
-                    {/* Narrative Clinical Notes */}
-                    {notes.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                          <FileText className="h-3.5 w-3.5 text-indigo-600" />
-                          Clinical Progress Notes
-                        </h4>
-                        <div className="space-y-2">
-                          {notes.map((note) => (
-                            <div
-                              key={note.id}
-                              className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs text-slate-700 space-y-1"
-                            >
-                              <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium">
-                                <span className="font-semibold text-slate-600 uppercase">
-                                  [{note.note_type}]
-                                </span>
-                                <span>Hour: +{note.step_hour}h</span>
-                              </div>
-                              <p className="whitespace-pre-wrap leading-relaxed font-sans">
-                                {note.note_text}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Labs and Biomarkers Table */}
-                    <div className="space-y-2">
-                      <h4 className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                        <Activity className="h-3.5 w-3.5 text-indigo-600" />
-                        Recorded Measurements ({measurements.length})
-                      </h4>
-                      {measurements.length === 0 ? (
-                        <p className="text-xs text-slate-400 italic">No lab values entered for this encounter.</p>
-                      ) : (
-                        <div className="overflow-x-auto max-h-60 border border-slate-200 rounded-lg">
-                          <Table>
-                            <TableHeader className="bg-slate-50 sticky top-0">
-                              <TableRow>
-                                <TableHead className="font-bold text-slate-700">Biomarker</TableHead>
-                                <TableHead className="font-bold text-slate-700">Category</TableHead>
-                                <TableHead className="font-bold text-slate-700">Value</TableHead>
-                                <TableHead className="font-bold text-slate-700">Source</TableHead>
-                                <TableHead className="font-bold text-slate-700">Ref Range</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody className="font-mono text-xs">
-                              {measurements.map((m) => {
-                                const val = m.value !== undefined ? m.value : (m as any).feature_value;
-                                const displayVal = typeof val === "number" ? val.toFixed(2) : (val != null ? String(val) : "—");
-                                const category = m.feature_category || (m as any).modality || "routine_labs";
-                                const refLow = m.ref_low !== undefined ? m.ref_low : (m as any).reference_low;
-                                const refHigh = m.ref_high !== undefined ? m.ref_high : (m as any).reference_high;
-
-                                return (
-                                  <TableRow key={m.id} className="hover:bg-slate-50">
-                                    <TableCell className="font-medium font-sans text-slate-800">
-                                      {m.feature_name}
-                                    </TableCell>
-                                    <TableCell className="text-slate-500 text-[11px]">
-                                      {category}
-                                    </TableCell>
-                                    <TableCell className="font-bold text-slate-900">
-                                      {displayVal} {m.unit || ""}
-                                    </TableCell>
-                                    <TableCell>
-                                      {m.is_synthetic ? (
-                                        <Badge
-                                          variant="outline"
-                                          className="text-[10px] font-bold text-purple-700 bg-purple-50 border-purple-200"
-                                        >
-                                          Synthesized
-                                        </Badge>
-                                      ) : (
-                                        <Badge
-                                          variant="outline"
-                                          className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border-emerald-200"
-                                        >
-                                          Observed
-                                        </Badge>
-                                      )}
-                                    </TableCell>
-                                    <TableCell className="text-slate-500 text-[11px]">
-                                      {refLow ?? "—"} – {refHigh ?? "—"}
-                                    </TableCell>
-                                  </TableRow>
-                                );
-                              })}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
                 )}
-              </Card>
+
+                {/* Measurements Table */}
+                {measurements.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#98A2B3] flex items-center gap-1.5">
+                      <Activity className="h-3.5 w-3.5" />
+                      <span>Recorded Laboratory Measurements ({measurements.length})</span>
+                    </span>
+                    <div className="border border-[#E9EBEF] rounded overflow-hidden">
+                      <table className="w-full text-left text-xs divide-y divide-[#E9EBEF]">
+                        <thead className="bg-[#FAFAFB] text-[#667085] text-[11px] uppercase tracking-wider font-medium">
+                          <tr>
+                            <th className="py-2 px-3">Biomarker</th>
+                            <th className="py-2 px-3">Modality</th>
+                            <th className="py-2 px-3 text-right">Value</th>
+                            <th className="py-2 px-3">Reference Range</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#E9EBEF]">
+                          {measurements.map((m) => {
+                            const val = m.value !== undefined ? m.value : (m as any).feature_value;
+                            return (
+                              <tr key={m.id || m.feature_name} className="hover:bg-[#FAFAFB]">
+                                <td className="py-2 px-3 font-semibold text-[#17191C]">
+                                  {m.feature_name}
+                                </td>
+                                <td className="py-2 px-3">
+                                  <span
+                                    className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                                      m.is_synthetic
+                                        ? "bg-[#7856A8]/10 text-[#7856A8]"
+                                        : "bg-[#0F766E]/10 text-[#0F766E]"
+                                    }`}
+                                  >
+                                    {m.is_synthetic ? "Synthetic Omics" : "Lab Measured"}
+                                  </span>
+                                </td>
+                                <td className="py-2 px-3 text-right font-mono font-bold text-[#17191C]">
+                                  {val != null ? Number(val).toFixed(2) : "—"} {m.unit}
+                                </td>
+                                <td className="py-2 px-3 font-mono text-[11px] text-[#667085]">
+                                  {m.ref_low != null && m.ref_high != null
+                                    ? `${m.ref_low} – ${m.ref_high} ${m.unit}`
+                                    : "Nominal"}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}

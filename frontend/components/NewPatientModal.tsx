@@ -10,9 +10,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { PatientCreate, CohortType } from "@/types/clinical";
 
 interface NewPatientModalProps {
@@ -87,111 +84,107 @@ export function NewPatientModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto bg-[#FFFFFF] border border-[#E9EBEF] text-[#17191C] p-6 rounded-lg">
+        <DialogHeader className="pb-3 border-b border-[#E9EBEF]">
+          <div className="flex items-center gap-2.5">
+            <div className="h-7 w-7 rounded-md bg-[#386DF4] text-white flex items-center justify-center shrink-0">
               <UserPlus className="h-4 w-4" />
             </div>
             <div>
-              <DialogTitle className="text-base font-bold text-slate-900">
+              <DialogTitle className="text-base font-semibold text-[#17191C]">
                 Enroll New Patient Record
               </DialogTitle>
-              <DialogDescription className="text-xs text-slate-500">
-                Register a patient into the PULSE longitudinal database.
+              <DialogDescription className="text-xs text-[#667085] mt-0.5">
+                Register a patient into the PULSE longitudinal clinical database.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
         {/* Quick Presets Bar */}
-        <div className="bg-indigo-50/60 p-2.5 rounded-lg border border-indigo-100 flex flex-wrap items-center justify-between gap-2 text-xs">
-          <span className="font-semibold text-indigo-900 flex items-center gap-1 text-[11px]">
-            <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
-            Quick Test Scenarios:
+        <div className="bg-[#FAFAFB] p-2.5 rounded-md border border-[#E9EBEF] flex flex-wrap items-center justify-between gap-2 text-xs">
+          <span className="font-medium text-[#667085] flex items-center gap-1 text-[11px]">
+            <Sparkles className="h-3 w-3 text-[#386DF4]" />
+            Test Scenarios:
           </span>
           <div className="flex gap-2">
-            <Button
+            <button
               type="button"
-              variant="outline"
-              size="sm"
               onClick={prefillOutpatient}
-              className="h-7 text-xs bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50"
+              className="h-6 px-2 text-[11px] font-medium bg-[#FFFFFF] hover:bg-[#F6F7F9] text-[#386DF4] border border-[#E9EBEF] rounded transition-colors"
             >
               Preset: Outpatient CV
-            </Button>
-            <Button
+            </button>
+            <button
               type="button"
-              variant="outline"
-              size="sm"
               onClick={prefillIcu}
-              className="h-7 text-xs bg-white text-rose-700 border-rose-200 hover:bg-rose-50"
+              className="h-6 px-2 text-[11px] font-medium bg-[#FFFFFF] hover:bg-[#F6F7F9] text-[#C2414B] border border-[#E9EBEF] rounded transition-colors"
             >
               Preset: ICU Sepsis
-            </Button>
+            </button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs pt-1">
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs pt-2">
           {error && (
-            <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg font-medium text-xs">
+            <div className="p-2.5 bg-[#C2414B]/10 border border-[#C2414B]/20 text-[#C2414B] rounded-md text-xs">
               {error}
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700">Medical Record Number (MRN) *</label>
-              <Input
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="font-medium text-[#17191C]">Medical Record Number (MRN) *</label>
+              <input
                 placeholder="e.g. MRN-CV-10029"
                 value={mrn}
                 onChange={(e) => setMrn(e.target.value)}
                 required
-                className="font-mono text-xs"
+                className="w-full h-8 px-2.5 bg-[#FFFFFF] border border-[#E9EBEF] rounded-md font-mono text-xs text-[#17191C] focus:border-[#386DF4] outline-none"
               />
             </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700">Patient Full Name *</label>
-              <Input
+            <div className="space-y-1">
+              <label className="font-medium text-[#17191C]">Patient Full Name *</label>
+              <input
                 placeholder="e.g. Eleanor Vance"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
-                className="text-xs"
+                className="w-full h-8 px-2.5 bg-[#FFFFFF] border border-[#E9EBEF] rounded-md text-xs text-[#17191C] focus:border-[#386DF4] outline-none"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700">Age (years)</label>
-              <Input
+            <div className="space-y-1">
+              <label className="font-medium text-[#17191C]">Age (years)</label>
+              <input
                 type="number"
                 min={0}
                 max={120}
                 value={age}
                 onChange={(e) => setAge(Number(e.target.value))}
                 required
-                className="text-xs"
+                className="w-full h-8 px-2.5 bg-[#FFFFFF] border border-[#E9EBEF] rounded-md font-mono text-xs text-[#17191C] focus:border-[#386DF4] outline-none"
               />
             </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700">Biological Sex</label>
+            <div className="space-y-1">
+              <label className="font-medium text-[#17191C]">Biological Sex</label>
               <select
                 value={sex}
                 onChange={(e) => setSex(e.target.value as "M" | "F")}
-                className="w-full h-8 bg-slate-50 border border-slate-300 rounded-md px-2 text-xs font-semibold focus:ring-2 focus:ring-indigo-500"
+                className="w-full h-8 bg-[#FFFFFF] border border-[#E9EBEF] rounded-md px-2 text-xs text-[#17191C] focus:border-[#386DF4] outline-none"
               >
                 <option value="M">Male (M)</option>
                 <option value="F">Female (F)</option>
               </select>
             </div>
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-700">Care Cohort</label>
+            <div className="space-y-1">
+              <label className="font-medium text-[#17191C]">Care Cohort</label>
               <select
                 value={cohortType}
                 onChange={(e) => setCohortType(e.target.value as CohortType)}
-                className="w-full h-8 bg-slate-50 border border-slate-300 rounded-md px-2 text-xs font-semibold focus:ring-2 focus:ring-indigo-500"
+                className="w-full h-8 bg-[#FFFFFF] border border-[#E9EBEF] rounded-md px-2 text-xs text-[#17191C] focus:border-[#386DF4] outline-none"
               >
                 <option value="OUTPATIENT_CHRONIC">Outpatient Omics</option>
                 <option value="INPATIENT_ACUTE_ICU">Inpatient ICU</option>
@@ -199,29 +192,33 @@ export function NewPatientModal({
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="font-bold text-slate-700">Clinical History Summary</label>
+          <div className="space-y-1">
+            <label className="font-medium text-[#17191C]">Clinical History Summary</label>
             <textarea
               rows={3}
               placeholder="Baseline conditions, comorbidities, or acute reason for monitoring..."
               value={historySummary}
               onChange={(e) => setHistorySummary(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 rounded-md p-2.5 text-xs text-slate-800 focus:ring-2 focus:ring-indigo-500"
+              className="w-full bg-[#FFFFFF] border border-[#E9EBEF] rounded-md p-2.5 text-xs text-[#17191C] focus:border-[#386DF4] outline-none resize-none"
             />
           </div>
 
-          <DialogFooter className="pt-3">
-            <Button type="button" variant="outline" size="sm" onClick={onClose} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              size="sm"
+          <DialogFooter className="pt-3 border-t border-[#E9EBEF]">
+            <button
+              type="button"
+              onClick={onClose}
               disabled={isSubmitting}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+              className="h-8 px-3 text-xs font-medium text-[#667085] hover:text-[#17191C] bg-[#FFFFFF] hover:bg-[#F6F7F9] border border-[#E9EBEF] rounded-md transition-colors"
             >
-              {isSubmitting ? "Enrolling Patient..." : "Enroll Patient"}
-            </Button>
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="h-8 px-3.5 bg-[#386DF4] hover:bg-[#2F5ECC] disabled:opacity-50 text-white rounded-md text-xs font-semibold shadow-xs transition"
+            >
+              {isSubmitting ? "Enrolling..." : "Enroll Patient"}
+            </button>
           </DialogFooter>
         </form>
       </DialogContent>

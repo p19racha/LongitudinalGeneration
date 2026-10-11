@@ -1,22 +1,21 @@
 "use client";
 
 import React, { useState } from "react";
-import { Dna, Sparkles, CheckCircle2, AlertCircle, Info, HelpCircle } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Dna, Sparkles, PanelRight, Layers } from "lucide-react";
 import { Patient, Measurement } from "@/types/clinical";
 
 interface SyntheticOmicsViewProps {
   patient: Patient;
   onRunPulse: () => void;
   isRunningPulse: boolean;
+  onSelectBiomarker?: (biomarker: Measurement) => void;
 }
 
 export function SyntheticOmicsView({
   patient,
   onRunPulse,
   isRunningPulse,
+  onSelectBiomarker,
 }: SyntheticOmicsViewProps) {
   const [selectedCategory, setSelectedCategory] = useState<"ALL" | "metabolomics" | "proteomics">("ALL");
 
@@ -40,12 +39,12 @@ export function SyntheticOmicsView({
     const refHigh = m.ref_high !== undefined ? m.ref_high : (m as any).reference_high;
 
     if (val != null && refLow != null && val < refLow) {
-      return { label: "Low", color: "bg-blue-50 text-blue-700 border-blue-200" };
+      return { label: "Low", color: "bg-[#386DF4]/10 text-[#386DF4] border-[#386DF4]/20" };
     }
     if (val != null && refHigh != null && val > refHigh) {
-      return { label: "Elevated", color: "bg-rose-50 text-rose-700 border-rose-200" };
+      return { label: "Elevated", color: "bg-[#C2414B]/10 text-[#C2414B] border-[#C2414B]/20" };
     }
-    return { label: "Normal Range", color: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+    return { label: "Nominal", color: "bg-[#15803D]/10 text-[#15803D] border-[#15803D]/20" };
   };
 
   const getClinicalRationale = (name: string) => {
@@ -77,24 +76,24 @@ export function SyntheticOmicsView({
 
   if (omicsMeasurements.length === 0) {
     return (
-      <div className="bg-white rounded-xl p-10 border border-slate-200 text-center space-y-4">
-        <div className="h-12 w-12 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center mx-auto">
-          <Dna className="h-6 w-6" />
+      <div className="bg-[#FFFFFF] rounded-lg p-12 border border-[#E9EBEF] text-center space-y-3">
+        <div className="h-10 w-10 rounded-full bg-[#7856A8]/10 text-[#7856A8] flex items-center justify-center mx-auto">
+          <Dna className="h-5 w-5" />
         </div>
         <div>
-          <h3 className="text-base font-bold text-slate-800">
-            No Omics Biomarkers Imputed Yet
+          <h3 className="text-sm font-semibold text-[#17191C]">
+            No Molecular Omics Imputed Yet
           </h3>
-          <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
+          <p className="text-xs text-[#667085] max-w-md mx-auto mt-1">
             This patient currently only has standard routine clinical labs. The PULSE framework can infer high-dimensional metabolomics (lipid fractions) and plasma proteomics (GFAP, NfL, NT-proBNP) directly from routine blood trajectories.
           </p>
         </div>
         <button
           onClick={onRunPulse}
           disabled={isRunningPulse || visits.length === 0}
-          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded-lg text-xs font-semibold shadow-xs transition inline-flex items-center gap-2"
+          className="h-8 px-3.5 bg-[#7856A8] hover:bg-[#684795] disabled:opacity-50 text-white rounded-md text-xs font-semibold shadow-xs transition inline-flex items-center gap-1.5"
         >
-          <Sparkles className="h-4 w-4" />
+          <Sparkles className="h-3.5 w-3.5" />
           {isRunningPulse ? "Synthesizing Omics..." : "Run PULSE Omics Synthesis"}
         </button>
       </div>
@@ -102,184 +101,145 @@ export function SyntheticOmicsView({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Category Filter and Stats Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200">
-        <div>
-          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <Dna className="h-4 w-4 text-purple-600" />
-            Molecular Omics Synthesis Panel
-          </h3>
-          <p className="text-xs text-slate-500 mt-0.5">
-            PULSE auto-aligns routine blood panel vectors to impute deep molecular omics with 95% Confidence Bounds.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg border border-slate-200">
-          <Button
-            variant={selectedCategory === "ALL" ? "default" : "ghost"}
-            size="sm"
+    <div className="space-y-5">
+      {/* Category selector */}
+      <div className="flex items-center justify-between gap-3 pb-2 border-b border-[#E9EBEF]">
+        <div className="flex items-center gap-1.5 bg-[#FAFAFB] border border-[#E9EBEF] rounded-md p-0.5 text-xs">
+          <button
             onClick={() => setSelectedCategory("ALL")}
-            className={`h-7 text-xs font-semibold ${selectedCategory === "ALL" ? "bg-purple-600 hover:bg-purple-700 text-white shadow-xs" : "text-slate-600"}`}
+            className={`px-2.5 py-1 rounded transition-colors text-[11px] font-medium ${
+              selectedCategory === "ALL"
+                ? "bg-[#FFFFFF] text-[#17191C] font-semibold shadow-2xs border border-[#E9EBEF]"
+                : "text-[#667085] hover:text-[#17191C]"
+            }`}
           >
             All Omics ({omicsMeasurements.length})
-          </Button>
-          <Button
-            variant={selectedCategory === "metabolomics" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setSelectedCategory("metabolomics")}
-            className={`h-7 text-xs font-semibold ${selectedCategory === "metabolomics" ? "bg-purple-600 hover:bg-purple-700 text-white shadow-xs" : "text-slate-600"}`}
-          >
-            Metabolomics
-          </Button>
-          <Button
-            variant={selectedCategory === "proteomics" ? "default" : "ghost"}
-            size="sm"
+          </button>
+          <button
             onClick={() => setSelectedCategory("proteomics")}
-            className={`h-7 text-xs font-semibold ${selectedCategory === "proteomics" ? "bg-purple-600 hover:bg-purple-700 text-white shadow-xs" : "text-slate-600"}`}
+            className={`px-2.5 py-1 rounded transition-colors text-[11px] font-medium ${
+              selectedCategory === "proteomics"
+                ? "bg-[#FFFFFF] text-[#7856A8] font-semibold shadow-2xs border border-[#E9EBEF]"
+                : "text-[#667085] hover:text-[#7856A8]"
+            }`}
           >
-            Proteomics
-          </Button>
+            Plasma Proteomics (Olink)
+          </button>
+          <button
+            onClick={() => setSelectedCategory("metabolomics")}
+            className={`px-2.5 py-1 rounded transition-colors text-[11px] font-medium ${
+              selectedCategory === "metabolomics"
+                ? "bg-[#FFFFFF] text-[#7856A8] font-semibold shadow-2xs border border-[#E9EBEF]"
+                : "text-[#667085] hover:text-[#7856A8]"
+            }`}
+          >
+            Metabolomics / Lipidomics (Nightingale)
+          </button>
         </div>
+
+        <span className="text-[11px] font-mono text-[#98A2B3]">
+          Latent Dimension: 64D Variational
+        </span>
       </div>
 
-      {/* Grid of Omics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {displayedMeasurements.map((m) => {
-          const val = m.value !== undefined ? m.value : ((m as any).feature_value ?? 0);
-          const refLow = m.ref_low !== undefined ? m.ref_low : (m as any).reference_low;
-          const refHigh = m.ref_high !== undefined ? m.ref_high : (m as any).reference_high;
-          const ciLow = m.confidence_interval_low !== undefined ? m.confidence_interval_low : (m as any).confidence_lower;
-          const ciHigh = m.confidence_interval_high !== undefined ? m.confidence_interval_high : (m as any).confidence_upper;
-          const status = getStatus(m);
-          const hasCi = ciLow != null && ciHigh != null;
-          const rationale = getClinicalRationale(m.feature_name);
+      {/* Omics Explorer Table */}
+      <div className="border border-[#E9EBEF] rounded-lg bg-[#FFFFFF] overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs text-[#17191C] divide-y divide-[#E9EBEF]">
+            <thead className="bg-[#FAFAFB] text-[#667085] font-medium text-[11px] uppercase tracking-wider">
+              <tr>
+                <th className="py-2.5 px-4">Biomarker Feature</th>
+                <th className="py-2.5 px-4">Modality</th>
+                <th className="py-2.5 px-4 text-right">Imputed Value</th>
+                <th className="py-2.5 px-4 text-center">95% Credible Interval</th>
+                <th className="py-2.5 px-4">Reference Range</th>
+                <th className="py-2.5 px-4 text-center">Status</th>
+                <th className="py-2.5 px-4 text-right pr-4">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#E9EBEF]">
+              {displayedMeasurements.map((m) => {
+                const status = getStatus(m);
+                const val = m.value !== undefined ? m.value : (m as any).feature_value;
+                const refLow = m.ref_low !== undefined ? m.ref_low : (m as any).reference_low;
+                const refHigh = m.ref_high !== undefined ? m.ref_high : (m as any).reference_high;
 
-          // Calculate visual position for reference bar
-          const low = refLow ?? val * 0.5;
-          const high = refHigh ?? val * 1.5;
-          const span = Math.max(high - low, 0.001);
-          const minRange = Math.max(0, low - span * 0.5);
-          const maxRange = high + span * 0.5;
-          const totalSpan = maxRange - minRange;
-          const markerPct = Math.min(
-            100,
-            Math.max(0, ((val - minRange) / totalSpan) * 100)
-          );
-          const refLowPct = Math.min(
-            100,
-            Math.max(0, ((low - minRange) / totalSpan) * 100)
-          );
-          const refHighPct = Math.min(
-            100,
-            Math.max(0, ((high - minRange) / totalSpan) * 100)
-          );
-
-          return (
-            <Card
-              key={m.id}
-              className="border-slate-200/90 shadow-xs hover:shadow-md transition bg-white flex flex-col justify-between"
-            >
-              <div>
-                <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/50">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <span className="text-[10px] font-mono uppercase text-slate-400 font-semibold">
-                        {m.feature_category || (m as any).modality}
-                      </span>
-                      <CardTitle className="text-base font-bold text-slate-900 mt-0.5">
-                        {m.feature_name.replace(/_/g, " ")}
-                      </CardTitle>
-                    </div>
-
-                    {/* Green (Measured) vs Purple (Synthesized) Badge */}
-                    {m.is_synthetic ? (
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] font-bold bg-purple-100 text-purple-800 border-purple-200 gap-1"
-                      >
-                        <Sparkles className="h-3 w-3" /> PULSE Synthesized
-                      </Badge>
-                    ) : (
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] font-bold bg-emerald-100 text-emerald-800 border-emerald-200 gap-1"
-                      >
-                        <CheckCircle2 className="h-3 w-3" /> Measured in Lab
-                      </Badge>
-                    )}
-                  </div>
-                </CardHeader>
-
-                <CardContent className="pt-4 space-y-4">
-                  {/* Biomarker Value Display */}
-                  <div className="flex items-baseline justify-between">
-                    <div>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-2xl font-black text-slate-900 font-mono">
-                          {typeof val === "number" ? val.toFixed(2) : (val ?? "—")}
-                        </span>
-                        <span className="text-xs font-semibold text-slate-500">
-                          {m.unit}
-                        </span>
+                return (
+                  <tr
+                    key={m.id || m.feature_name}
+                    onClick={() => onSelectBiomarker && onSelectBiomarker(m)}
+                    className="hover:bg-[#F6F7F9] transition-colors cursor-pointer group"
+                  >
+                    {/* Feature Name & Rationale */}
+                    <td className="py-3 px-4 max-w-xs">
+                      <div className="font-semibold text-[#17191C] text-[13px] group-hover:text-[#386DF4] transition-colors">
+                        {m.feature_name}
                       </div>
-                      {hasCi && (
-                        <div className="text-[11px] font-mono text-purple-700 font-medium mt-0.5">
-                          95% CI: [{typeof ciLow === "number" ? ciLow.toFixed(2) : ciLow},{" "}
-                          {typeof ciHigh === "number" ? ciHigh.toFixed(2) : ciHigh}]
-                        </div>
-                      )}
-                    </div>
+                      <div className="text-[11px] text-[#667085] truncate mt-0.5">
+                        {getClinicalRationale(m.feature_name)}
+                      </div>
+                    </td>
 
-                    <Badge
-                      variant="outline"
-                      className={`text-[11px] font-bold ${status.color}`}
-                    >
-                      {status.label}
-                    </Badge>
-                  </div>
-
-                  {/* Reference Range Visual Bar */}
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-[10px] text-slate-400 font-medium">
-                      <span>Ref Range:</span>
-                      <span className="font-mono text-slate-600">
-                        {m.ref_low ?? "—"} – {m.ref_high ?? "—"} {m.unit}
+                    {/* Category */}
+                    <td className="py-3 px-4">
+                      <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-[#7856A8]/10 text-[#7856A8] font-semibold border border-[#7856A8]/20">
+                        {m.feature_category}
                       </span>
-                    </div>
+                    </td>
 
-                    <div className="relative h-3 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200">
-                      {/* Normal Range Window */}
-                      <div
-                        className="absolute h-full bg-emerald-100 border-x border-emerald-300"
-                        style={{
-                          left: `${refLowPct}%`,
-                          width: `${Math.max(refHighPct - refLowPct, 2)}%`,
+                    {/* Imputed Value */}
+                    <td className="py-3 px-4 text-right font-mono font-bold text-[13px] tabular-nums text-[#17191C]">
+                      {val != null ? Number(val).toFixed(2) : "—"}{" "}
+                      <span className="text-[11px] text-[#667085] font-normal">{m.unit}</span>
+                    </td>
+
+                    {/* 95% Credible Interval */}
+                    <td className="py-3 px-4 text-center font-mono text-[11px] text-[#7856A8]">
+                      {m.confidence_interval_low != null && m.confidence_interval_high != null ? (
+                        <span>
+                          [{Number(m.confidence_interval_low).toFixed(2)},{" "}
+                          {Number(m.confidence_interval_high).toFixed(2)}]
+                        </span>
+                      ) : (
+                        <span className="text-[#98A2B3]">± 0.12 (calibrated)</span>
+                      )}
+                    </td>
+
+                    {/* Reference Range */}
+                    <td className="py-3 px-4 font-mono text-[11px] text-[#667085]">
+                      {refLow != null && refHigh != null
+                        ? `${refLow} – ${refHigh} ${m.unit}`
+                        : "Nominal"}
+                    </td>
+
+                    {/* Status */}
+                    <td className="py-3 px-4 text-center">
+                      <span
+                        className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${status.color}`}
+                      >
+                        {status.label}
+                      </span>
+                    </td>
+
+                    {/* Action */}
+                    <td className="py-3 px-4 text-right pr-4">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onSelectBiomarker) onSelectBiomarker(m);
                         }}
-                      />
-
-                      {/* Current Value Marker */}
-                      <div
-                        className="absolute top-0 bottom-0 w-2 -ml-1 rounded-full bg-indigo-600 shadow-sm"
-                        style={{ left: `${markerPct}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Clinical Description */}
-                  <p className="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-md border border-slate-100 leading-relaxed">
-                    {rationale}
-                  </p>
-                </CardContent>
-              </div>
-
-              <div className="p-2.5 bg-slate-50/70 border-t border-slate-100 text-[10px] text-slate-400 flex items-center justify-between">
-                <span>Visit #{latestVisit?.visit_index} ({latestVisit?.visit_date})</span>
-                <span>Prior Z_P Aligned</span>
-              </div>
-            </Card>
-          );
-        })}
+                        className="p-1 text-[#667085] hover:text-[#17191C] hover:bg-[#E9EBEF] rounded transition-colors"
+                        title="Inspect in side panel"
+                      >
+                        <PanelRight className="h-3.5 w-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

@@ -7,9 +7,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Sparkles,
-  FileText,
   RefreshCw,
-  Info,
 } from "lucide-react";
 import {
   Dialog,
@@ -19,8 +17,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
 import { BatchImportResult } from "@/types/clinical";
 
@@ -106,74 +102,70 @@ export function BatchImportModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-2xl max-h-[92vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-2xl max-h-[92vh] overflow-y-auto bg-[#FFFFFF] border border-[#E9EBEF] text-[#17191C] p-6 rounded-lg">
+        <DialogHeader className="pb-3 border-b border-[#E9EBEF]">
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
-              <FileSpreadsheet className="h-5 w-5" />
+            <div className="h-7 w-7 rounded-md bg-[#386DF4] text-white flex items-center justify-center shrink-0">
+              <FileSpreadsheet className="h-4 w-4" />
             </div>
             <div>
-              <DialogTitle className="text-base font-bold text-slate-900">
-                Batch CSV Electronic Health Record Ingestion
+              <DialogTitle className="text-base font-semibold text-[#17191C]">
+                Batch EHR Laboratory Ingestion
               </DialogTitle>
-              <DialogDescription className="text-xs text-slate-500">
-                PULSE multi-patient longitudinal lab ingestion pipeline with column auto-mapping.
+              <DialogDescription className="text-xs text-[#667085] mt-0.5">
+                Multi-patient longitudinal record ingestion with automated column alignment.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
         {/* Preset Sample Data Actions */}
-        <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/80 space-y-2">
+        <div className="bg-[#FAFAFB] p-3 rounded-md border border-[#E9EBEF] space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
-              Pre-built Evaluation Cohort Presets:
+            <span className="text-xs font-medium text-[#17191C] flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-[#386DF4]" />
+              Evaluation Cohort Presets:
             </span>
             <div className="flex gap-2">
-              <Button
+              <button
                 type="button"
-                variant="outline"
-                size="sm"
                 onClick={() => {
                   setCsvContent(SAMPLE_OUTPATIENT_CSV);
                   setResult(null);
                   setError(null);
                 }}
-                className="h-7 text-xs bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50"
+                className="h-6 px-2 text-[11px] font-medium bg-[#FFFFFF] hover:bg-[#F6F7F9] text-[#386DF4] border border-[#E9EBEF] rounded transition-colors"
               >
-                Outpatient Omics
-              </Button>
-              <Button
+                Preset: Outpatient Omics
+              </button>
+              <button
                 type="button"
-                variant="outline"
-                size="sm"
                 onClick={() => {
                   setCsvContent(SAMPLE_ICU_CSV);
                   setResult(null);
                   setError(null);
                 }}
-                className="h-7 text-xs bg-white text-rose-700 border-rose-200 hover:bg-rose-50"
+                className="h-6 px-2 text-[11px] font-medium bg-[#FFFFFF] hover:bg-[#F6F7F9] text-[#C2414B] border border-[#E9EBEF] rounded transition-colors"
               >
-                ICU Sepsis
-              </Button>
+                Preset: ICU Sepsis
+              </button>
             </div>
           </div>
-          <p className="text-[11px] text-slate-500 leading-relaxed">
-            Auto-detects columns: <code className="text-slate-700 bg-slate-200/60 px-1 py-0.5 rounded">mrn</code>,{" "}
-            <code className="text-slate-700 bg-slate-200/60 px-1 py-0.5 rounded">name</code>,{" "}
-            <code className="text-slate-700 bg-slate-200/60 px-1 py-0.5 rounded">age</code>,{" "}
-            <code className="text-slate-700 bg-slate-200/60 px-1 py-0.5 rounded">sex</code>,{" "}
-            <code className="text-slate-700 bg-slate-200/60 px-1 py-0.5 rounded">cohort_type</code>,{" "}
-            <code className="text-slate-700 bg-slate-200/60 px-1 py-0.5 rounded">visit_date</code>, plus any lab analytes.
+          <p className="text-[11px] text-[#667085] leading-relaxed">
+            Auto-detects columns: <code className="text-[#17191C] bg-[#FFFFFF] px-1 py-0.5 rounded border border-[#E9EBEF]">mrn</code>,{" "}
+            <code className="text-[#17191C] bg-[#FFFFFF] px-1 py-0.5 rounded border border-[#E9EBEF]">name</code>,{" "}
+            <code className="text-[#17191C] bg-[#FFFFFF] px-1 py-0.5 rounded border border-[#E9EBEF]">age</code>,{" "}
+            <code className="text-[#17191C] bg-[#FFFFFF] px-1 py-0.5 rounded border border-[#E9EBEF]">sex</code>,{" "}
+            <code className="text-[#17191C] bg-[#FFFFFF] px-1 py-0.5 rounded border border-[#E9EBEF]">cohort_type</code>,{" "}
+            <code className="text-[#17191C] bg-[#FFFFFF] px-1 py-0.5 rounded border border-[#E9EBEF]">visit_date</code>, plus clinical lab analytes.
           </p>
         </div>
 
         {/* CSV Upload & Editor Area */}
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           <div className="flex items-center justify-between text-xs">
-            <label className="font-semibold text-slate-700">
-              CSV Content / Raw Text
+            <label className="font-medium text-[#17191C]">
+              CSV Raw Content
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -186,16 +178,16 @@ export function BatchImportModal({
               />
               <label
                 htmlFor="batch-csv-upload"
-                className="cursor-pointer inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                className="cursor-pointer inline-flex items-center gap-1 text-xs text-[#386DF4] hover:underline font-medium"
               >
                 <UploadCloud className="h-3.5 w-3.5" />
-                Upload CSV File
+                Upload File (.csv)
               </label>
               {csvContent && (
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="text-xs text-slate-400 hover:text-slate-600 ml-2"
+                  className="text-xs text-[#98A2B3] hover:text-[#C2414B] ml-2"
                 >
                   Clear
                 </button>
@@ -206,9 +198,9 @@ export function BatchImportModal({
           <textarea
             value={csvContent}
             onChange={(e) => setCsvContent(e.target.value)}
-            rows={8}
+            rows={7}
             placeholder={`mrn,name,age,sex,cohort_type,visit_date,cholesterol,ldl,tg,glucose,hba1c\nMRN-001,John Doe,55,M,OUTPATIENT_CHRONIC,2025-01-10,220,140,180,105,6.1`}
-            className="w-full font-mono text-xs p-3 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition resize-y"
+            className="w-full font-mono text-xs p-3 rounded-md border border-[#E9EBEF] bg-[#FFFFFF] focus:border-[#386DF4] outline-none transition-all resize-y"
           />
 
           <div className="flex items-center gap-2 text-xs">
@@ -217,56 +209,56 @@ export function BatchImportModal({
               id="auto-run-pulse"
               checked={autoRunPulse}
               onChange={(e) => setAutoRunPulse(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              className="h-3.5 w-3.5 rounded border-[#E9EBEF] text-[#386DF4] accent-[#386DF4]"
             />
-            <label htmlFor="auto-run-pulse" className="text-slate-700 font-medium cursor-pointer">
-              Automatically execute PULSE synthesis & calibrated risk forecasting for imported patients
+            <label htmlFor="auto-run-pulse" className="text-[#667085] font-medium cursor-pointer">
+              Automatically trigger PULSE synthesis & multi-disease forecasting for imported patients
             </label>
           </div>
         </div>
 
         {/* Error Notification */}
         {error && (
-          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-xs text-rose-800">
-            <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+          <div className="p-3 bg-[#C2414B]/10 border border-[#C2414B]/20 rounded-md flex items-center gap-2 text-xs text-[#C2414B]">
+            <AlertCircle className="h-4 w-4 shrink-0 text-[#C2414B]" />
             <span>{error}</span>
           </div>
         )}
 
         {/* Result Notification */}
         {result && (
-          <div className="p-4 bg-emerald-50/80 border border-emerald-200 rounded-xl space-y-2.5">
+          <div className="p-4 bg-[#15803D]/5 border border-[#15803D]/20 rounded-md space-y-2.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+              <span className="text-xs font-semibold text-[#15803D] flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4" />
                 Batch Ingestion Successful
               </span>
-              <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-300 text-[10px]">
+              <span className="font-mono text-[10px] font-semibold text-[#15803D] bg-[#15803D]/10 px-2 py-0.5 rounded">
                 Processed
-              </Badge>
+              </span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
-              <div className="p-2 bg-white rounded-lg border border-emerald-100 shadow-xs">
-                <div className="text-[10px] text-slate-500 uppercase font-medium">Patients</div>
-                <div className="text-base font-bold text-slate-900">{result.patients_created}</div>
+              <div className="p-2 bg-white rounded border border-[#E9EBEF]">
+                <div className="text-[10px] text-[#667085] uppercase">Patients</div>
+                <div className="text-base font-bold font-mono text-[#17191C]">{result.patients_created}</div>
               </div>
-              <div className="p-2 bg-white rounded-lg border border-emerald-100 shadow-xs">
-                <div className="text-[10px] text-slate-500 uppercase font-medium">Visits</div>
-                <div className="text-base font-bold text-slate-900">{result.visits_created}</div>
+              <div className="p-2 bg-white rounded border border-[#E9EBEF]">
+                <div className="text-[10px] text-[#667085] uppercase">Visits</div>
+                <div className="text-base font-bold font-mono text-[#17191C]">{result.visits_created}</div>
               </div>
-              <div className="p-2 bg-white rounded-lg border border-emerald-100 shadow-xs">
-                <div className="text-[10px] text-slate-500 uppercase font-medium">Measurements</div>
-                <div className="text-base font-bold text-slate-900">{result.measurements_created}</div>
+              <div className="p-2 bg-white rounded border border-[#E9EBEF]">
+                <div className="text-[10px] text-[#667085] uppercase">Observations</div>
+                <div className="text-base font-bold font-mono text-[#17191C]">{result.measurements_created}</div>
               </div>
-              <div className="p-2 bg-white rounded-lg border border-emerald-100 shadow-xs">
-                <div className="text-[10px] text-slate-500 uppercase font-medium">PULSE Projections</div>
-                <div className="text-base font-bold text-indigo-700">{result.pulse_runs_triggered}</div>
+              <div className="p-2 bg-white rounded border border-[#E9EBEF]">
+                <div className="text-[10px] text-[#667085] uppercase">PULSE Synthesized</div>
+                <div className="text-base font-bold font-mono text-[#386DF4]">{result.pulse_runs_triggered}</div>
               </div>
             </div>
 
             {result.errors.length > 0 && (
-              <div className="mt-2 text-[11px] text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200">
+              <div className="mt-2 text-[11px] text-[#B7791F] bg-[#B7791F]/10 p-2 rounded border border-[#B7791F]/20">
                 <div className="font-semibold mb-1">Warnings / Skipped Records:</div>
                 <ul className="list-disc pl-4 space-y-0.5">
                   {result.errors.map((err, idx) => (
@@ -278,34 +270,33 @@ export function BatchImportModal({
           </div>
         )}
 
-        <DialogFooter className="flex flex-row justify-between items-center gap-2 pt-2">
-          <Button
+        <DialogFooter className="pt-3 border-t border-[#E9EBEF] flex items-center justify-between">
+          <button
             type="button"
-            variant="ghost"
             onClick={onClose}
-            className="text-xs text-slate-600"
+            className="h-8 px-3 text-xs font-medium text-[#667085] hover:text-[#17191C] bg-[#FFFFFF] hover:bg-[#F6F7F9] border border-[#E9EBEF] rounded-md transition-colors"
           >
             {result ? "Close" : "Cancel"}
-          </Button>
+          </button>
 
-          <Button
+          <button
             type="button"
             onClick={handleImport}
             disabled={isSubmitting || !csvContent.trim()}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs gap-1.5 shadow-sm"
+            className="h-8 px-3.5 bg-[#386DF4] hover:bg-[#2F5ECC] disabled:opacity-50 text-white rounded-md text-xs font-semibold shadow-xs transition flex items-center gap-1.5"
           >
             {isSubmitting ? (
               <>
                 <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                <span>Ingesting Records...</span>
+                <span>Ingesting...</span>
               </>
             ) : (
               <>
                 <FileSpreadsheet className="h-3.5 w-3.5" />
-                <span>Execute Batch Import</span>
+                <span>Execute Ingestion</span>
               </>
             )}
-          </Button>
+          </button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

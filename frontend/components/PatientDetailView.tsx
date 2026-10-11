@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import {
-  Activity,
   Sparkles,
   PlusCircle,
   FileText,
@@ -16,11 +15,9 @@ import {
   Sliders,
   Download,
   Bot,
+  ExternalLink,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Patient, VisitCreate } from "@/types/clinical";
+import { Patient, VisitCreate, Measurement } from "@/types/clinical";
 import { RiskScorecardView } from "@/components/views/RiskScorecardView";
 import { SyntheticOmicsView } from "@/components/views/SyntheticOmicsView";
 import { TrajectoriesView } from "@/components/views/TrajectoriesView";
@@ -38,6 +35,7 @@ interface PatientDetailViewProps {
   onAddVisit: (data: VisitCreate) => Promise<void>;
   onDeletePatient: (patientId: string) => Promise<void>;
   isRunningPulse: boolean;
+  onSelectBiomarker?: (m: Measurement) => void;
 }
 
 export function PatientDetailView({
@@ -47,8 +45,11 @@ export function PatientDetailView({
   onAddVisit,
   onDeletePatient,
   isRunningPulse,
+  onSelectBiomarker,
 }: PatientDetailViewProps) {
-  const [activeTab, setActiveTab] = useState<string>("risk");
+  const [activeTab, setActiveTab] = useState<
+    "risk" | "synthetic_omics" | "digital_twin" | "trajectories" | "timeline" | "copilot"
+  >("risk");
   const [isAddVisitOpen, setIsAddVisitOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -72,111 +73,114 @@ export function PatientDetailView({
     }
   };
 
+  const tabs: Array<{
+    id: typeof activeTab;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    count?: number;
+  }> = [
+    { id: "risk", label: "Risk Scorecard", icon: ShieldCheck },
+    { id: "synthetic_omics", label: "Synthetic Omics Panel", icon: Dna },
+    { id: "digital_twin", label: "Digital Twin Sandbox", icon: Sliders },
+    { id: "trajectories", label: "Trajectories", icon: TrendingUp },
+    { id: "timeline", label: "Encounters & Notes", icon: Calendar, count: visits.length },
+    { id: "copilot", label: "AI Co-Pilot", icon: Bot },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Patient Profile Header Card */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-6">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+      {/* Patient Profile Header Strip */}
+      <div className="border border-[#E9EBEF] rounded-lg p-5 bg-[#FFFFFF] space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           {/* Identity & Demographics */}
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+          <div className="space-y-1.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-[#17191C]">
                 {patient.full_name}
-              </h2>
-              <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+              </h1>
+              <span className="font-mono text-xs font-medium text-[#667085] bg-[#FAFAFB] px-2 py-0.5 rounded border border-[#E9EBEF]">
                 {patient.mrn}
               </span>
-              <Badge
-                variant="outline"
-                className={`text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 ${
+              <span
+                className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${
                   isIcu
-                    ? "bg-rose-50 text-rose-700 border-rose-200"
-                    : "bg-indigo-50 text-indigo-700 border-indigo-200"
+                    ? "bg-[#C2414B]/10 text-[#C2414B]"
+                    : "bg-[#EDF3FF] text-[#386DF4]"
                 }`}
               >
-                {isIcu ? "ICU Acute Monitoring" : "Outpatient Omics Screening"}
-              </Badge>
+                {isIcu ? "ICU Acute Cohort" : "Outpatient Chronic Cohort"}
+              </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600 font-medium">
-              <span className="flex items-center gap-1.5">
-                <User className="h-3.5 w-3.5 text-slate-400" />
-                {patient.age} years old • {patient.sex === "M" ? "Male" : "Female"}
+            <div className="flex flex-wrap items-center gap-3 text-xs text-[#667085]">
+              <span>
+                {patient.age} yrs • {patient.sex === "M" ? "Male" : "Female"}
               </span>
               <span>•</span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5 text-slate-400" />
-                {visits.length} {isIcu ? "Timepoint Steps (4h intervals)" : "Longitudinal Encounters"}
+              <span>
+                {visits.length} {isIcu ? "Timepoints (4h steps)" : "Recorded Encounters"}
               </span>
               {latestVisit && (
                 <>
                   <span>•</span>
                   <span>
-                    Last Encounter: <strong>{latestVisit.visit_date}</strong>
+                    Latest Visit: <strong>{latestVisit.visit_date}</strong>
                   </span>
                 </>
               )}
             </div>
 
             {patient.clinical_history_summary && (
-              <p className="text-xs text-slate-600 italic bg-slate-50 p-2.5 rounded-lg border border-slate-100 max-w-3xl leading-relaxed">
-                &quot;{patient.clinical_history_summary}&quot;
+              <p className="text-xs text-[#667085] bg-[#FAFAFB] p-2.5 rounded border border-[#E9EBEF] max-w-3xl leading-relaxed mt-2">
+                &ldquo;{patient.clinical_history_summary}&rdquo;
               </p>
             )}
           </div>
 
           {/* Action Toolbar */}
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Primary PULSE Action */}
-            <Button
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {/* Primary Action: Run PULSE Engine */}
+            <button
               onClick={onRunPulse}
               disabled={isRunningPulse || visits.length === 0}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-md shadow-indigo-600/20 gap-2 px-4 py-2"
+              className="h-8 px-3.5 bg-[#386DF4] hover:bg-[#2F5ECC] disabled:opacity-50 text-white rounded-md text-xs font-semibold shadow-xs transition flex items-center gap-1.5"
             >
-              <Sparkles className={`h-4 w-4 ${isRunningPulse ? "animate-spin" : ""}`} />
-              <span>{isRunningPulse ? "Synthesizing Multimodal Omics..." : "Run PULSE Engine"}</span>
-            </Button>
+              <Sparkles className={`h-3.5 w-3.5 ${isRunningPulse ? "animate-spin" : ""}`} />
+              <span>{isRunningPulse ? "Synthesizing..." : "Run PULSE Engine"}</span>
+            </button>
 
             {/* Add Encounter */}
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => setIsAddVisitOpen(true)}
-              className="text-xs font-semibold text-slate-700 border-slate-300 hover:bg-slate-50 gap-1.5"
+              className="h-8 px-3 text-xs font-medium text-[#17191C] bg-[#FFFFFF] hover:bg-[#F6F7F9] border border-[#E9EBEF] rounded-md transition-colors flex items-center gap-1.5"
             >
-              <PlusCircle className="h-4 w-4 text-indigo-600" />
+              <PlusCircle className="h-3.5 w-3.5 text-[#667085]" />
               <span>Add Encounter</span>
-            </Button>
+            </button>
 
-            {/* Generate Report */}
-            <Button
-              variant="outline"
-              size="sm"
+            {/* Generate Report Dossier */}
+            <button
               onClick={() => setIsReportOpen(true)}
-              className="text-xs font-semibold text-slate-700 border-slate-300 hover:bg-slate-50 gap-1.5"
+              className="h-8 px-3 text-xs font-medium text-[#17191C] bg-[#FFFFFF] hover:bg-[#F6F7F9] border border-[#E9EBEF] rounded-md transition-colors flex items-center gap-1.5"
             >
-              <FileText className="h-4 w-4 text-indigo-600" />
+              <FileText className="h-3.5 w-3.5 text-[#667085]" />
               <span>Clinical Dossier</span>
-            </Button>
+            </button>
 
             {/* Export CSV */}
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => {
                 window.open(`http://localhost:8000/api/patients/${patient.id}/export/csv`, "_blank");
               }}
-              className="text-xs font-semibold text-slate-700 border-slate-300 hover:bg-slate-50 gap-1"
-              title="Download Longitudinal Measurements as CSV"
+              title="Download Longitudinal CSV"
+              className="h-8 px-2.5 text-xs font-medium text-[#667085] hover:text-[#17191C] bg-[#FFFFFF] hover:bg-[#F6F7F9] border border-[#E9EBEF] rounded-md transition-colors flex items-center gap-1"
             >
               <Download className="h-3.5 w-3.5" />
               <span>CSV</span>
-            </Button>
+            </button>
 
             {/* Export FHIR */}
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={async () => {
                 try {
                   const fhir = await (await fetch(`http://localhost:8000/api/patients/${patient.id}/export/fhir`)).json();
@@ -191,134 +195,110 @@ export function PatientDetailView({
                   alert("Export failed.");
                 }
               }}
-              className="text-xs font-semibold text-slate-700 border-slate-300 hover:bg-slate-50 gap-1"
               title="Export as HL7 FHIR R4 Bundle"
+              className="h-8 px-2.5 text-xs font-medium text-[#667085] hover:text-[#17191C] bg-[#FFFFFF] hover:bg-[#F6F7F9] border border-[#E9EBEF] rounded-md transition-colors flex items-center gap-1"
             >
               <Download className="h-3.5 w-3.5" />
               <span>FHIR</span>
-            </Button>
+            </button>
 
             {/* Delete Patient */}
-            <Button
-              variant="ghost"
-              size="icon"
+            <button
               onClick={handleDelete}
               disabled={isDeleting}
-              className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 h-8 w-8"
               title="Delete Patient Record"
+              className="h-8 w-8 text-[#98A2B3] hover:text-[#C2414B] hover:bg-[#C2414B]/10 rounded-md transition-colors flex items-center justify-center"
             >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
           </div>
         </div>
 
-        {/* SaMD Safety Notice Banner */}
-        <div className="mt-4 p-3 bg-amber-50/80 border border-amber-200/80 rounded-xl flex items-center justify-between text-xs text-amber-900">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-amber-600 shrink-0" />
+        {/* SaMD Safety Regulatory Notice */}
+        <div className="pt-3 border-t border-[#E9EBEF] flex items-center justify-between text-[11px] text-[#667085]">
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck className="h-3.5 w-3.5 text-[#386DF4] shrink-0" />
             <span>
-              <strong>Investigational SaMD Notice:</strong> PULSE reconstructions and risk scorecards are generative statistical aids for clinical personnel and must be verified against direct confirmatory laboratory testing.
+              <strong>SaMD Regulatory Notice:</strong> PULSE reconstructions and risk scorecards are generative statistical aids and must be verified against direct confirmatory laboratory testing.
             </span>
           </div>
-          <span className="font-mono text-[10px] text-amber-700 uppercase font-bold shrink-0 ml-2">
+          <span className="font-mono text-[10px] text-[#98A2B3] uppercase shrink-0 hidden sm:inline">
             21 CFR Part 11 Audit Active
           </span>
         </div>
       </div>
 
-      {/* HL7 FHIR CDS Hooks Real-Time Decision Cards */}
+      {/* HL7 FHIR CDS Hooks Decision Cards */}
       <CDSCardsView patientId={patient.id} />
 
-      {/* Official shadcn Tabs Component */}
-      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val)} className="w-full space-y-6">
-        <TabsList className="bg-slate-100 p-1 h-auto flex flex-wrap gap-1 rounded-xl border border-slate-200">
-          <TabsTrigger
-            value="risk"
-            className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-xs py-2 px-3 gap-1.5"
-          >
-            <ShieldCheck className="h-4 w-4 text-indigo-600" />
-            <span>Risk Scorecard</span>
-          </TabsTrigger>
+      {/* Linear-Style Horizontal Tab Navigation Strip */}
+      <div className="border-b border-[#E9EBEF] flex items-center gap-1 overflow-x-auto text-xs">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
 
-          <TabsTrigger
-            value="synthetic_omics"
-            className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-purple-700 data-[state=active]:shadow-xs py-2 px-3 gap-1.5"
-          >
-            <Dna className="h-4 w-4 text-purple-600" />
-            <span>Synthetic Omics Panel</span>
-          </TabsTrigger>
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`h-9 px-3 flex items-center gap-2 font-medium transition-all border-b-2 shrink-0 ${
+                isActive
+                  ? "border-[#386DF4] text-[#386DF4] font-semibold"
+                  : "border-transparent text-[#667085] hover:text-[#17191C] hover:border-[#E9EBEF]"
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              <span>{tab.label}</span>
+              {tab.count !== undefined && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-[#F6F7F9] text-[#667085] border border-[#E9EBEF]">
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
 
-          <TabsTrigger
-            value="digital_twin"
-            className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-xs py-2 px-3 gap-1.5"
-          >
-            <Sliders className="h-4 w-4 text-indigo-600" />
-            <span>Digital Twin (What-If Sandbox)</span>
-          </TabsTrigger>
-
-          <TabsTrigger
-            value="trajectories"
-            className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-xs py-2 px-3 gap-1.5"
-          >
-            <TrendingUp className="h-4 w-4 text-indigo-600" />
-            <span>Longitudinal Trajectories</span>
-          </TabsTrigger>
-
-          <TabsTrigger
-            value="timeline"
-            className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-xs py-2 px-3 gap-1.5"
-          >
-            <Calendar className="h-4 w-4 text-indigo-600" />
-            <span>Encounters & Notes ({visits.length})</span>
-          </TabsTrigger>
-
-          <TabsTrigger
-            value="copilot"
-            className="text-xs font-semibold data-[state=active]:bg-white data-[state=active]:text-indigo-700 data-[state=active]:shadow-xs py-2 px-3 gap-1.5"
-          >
-            <Bot className="h-4 w-4 text-indigo-600" />
-            <span>Clinical AI Co-Pilot</span>
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Tab Panels */}
-        <TabsContent value="risk" className="mt-0">
+      {/* Tab Panels */}
+      <div className="pt-2">
+        {activeTab === "risk" && (
           <RiskScorecardView
             patient={patient}
             onRunPulse={onRunPulse}
             isRunningPulse={isRunningPulse}
           />
-        </TabsContent>
+        )}
 
-        <TabsContent value="synthetic_omics" className="mt-0">
+        {activeTab === "synthetic_omics" && (
           <SyntheticOmicsView
             patient={patient}
             onRunPulse={onRunPulse}
             isRunningPulse={isRunningPulse}
+            onSelectBiomarker={onSelectBiomarker}
           />
-        </TabsContent>
+        )}
 
-        <TabsContent value="digital_twin" className="mt-0">
+        {activeTab === "digital_twin" && (
           <DigitalTwinView patient={patient} />
-        </TabsContent>
+        )}
 
-        <TabsContent value="trajectories" className="mt-0">
+        {activeTab === "trajectories" && (
           <TrajectoriesView patient={patient} />
-        </TabsContent>
+        )}
 
-        <TabsContent value="timeline" className="mt-0">
+        {activeTab === "timeline" && (
           <TimelineNotesView
             patient={patient}
             onOpenAddVisit={() => setIsAddVisitOpen(true)}
           />
-        </TabsContent>
+        )}
 
-        <TabsContent value="copilot" className="mt-0">
+        {activeTab === "copilot" && (
           <ClinicalCopilotView patient={patient} />
-        </TabsContent>
-      </Tabs>
+        )}
+      </div>
 
-      {/* Modals */}
+      {/* Add Encounter Modal */}
       <AddVisitModal
         isOpen={isAddVisitOpen}
         patient={patient}
@@ -330,6 +310,7 @@ export function PatientDetailView({
         }}
       />
 
+      {/* Report Modal */}
       <ReportModal
         isOpen={isReportOpen}
         patient={patient}
