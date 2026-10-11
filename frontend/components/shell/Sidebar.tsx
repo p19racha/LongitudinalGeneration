@@ -15,7 +15,7 @@ import {
   Sparkles,
 } from "lucide-react";
 
-export type NavItem = "overview" | "patients" | "analytics" | "alerts" | "copilot";
+export type NavItem = "overview" | "patients" | "analytics" | "alerts";
 
 interface SidebarProps {
   activeItem: NavItem;
@@ -68,11 +68,6 @@ export function Sidebar({
       icon: Bell,
       badge: unacknowledgedAlertsCount > 0 ? unacknowledgedAlertsCount : undefined,
       badgeVariant: "critical",
-    },
-    {
-      id: "copilot",
-      label: "Clinical AI Co-Pilot",
-      icon: Sparkles,
     },
   ];
 

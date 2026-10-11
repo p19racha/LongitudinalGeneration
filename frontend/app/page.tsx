@@ -8,7 +8,6 @@ import { InspectorContent } from "@/components/shell/RightInspector";
 import { OverviewView } from "@/components/views/OverviewView";
 import { PatientRegistryView } from "@/components/views/PatientRegistryView";
 import { PopulationHealthView } from "@/components/views/PopulationHealthView";
-import { ClinicalCopilotView } from "@/components/views/ClinicalCopilotView";
 import { PatientDetailView } from "@/components/PatientDetailView";
 import { NewPatientModal } from "@/components/NewPatientModal";
 import { BatchImportModal } from "@/components/BatchImportModal";
@@ -255,8 +254,6 @@ export default function Home() {
     breadcrumbs.push({ label: "Population Health Analytics", active: true });
   } else if (activeNav === "alerts") {
     breadcrumbs.push({ label: "Deterioration Alerts", active: true });
-  } else if (activeNav === "copilot") {
-    breadcrumbs.push({ label: "Clinical AI Co-Pilot", active: true });
   } else {
     // activeNav === "patients"
     if (selectedPatient) {
@@ -469,37 +466,6 @@ export default function Home() {
                 </tbody>
               </table>
             </div>
-          </div>
-        )}
-
-        {activeNav === "copilot" && (
-          <div className="space-y-4">
-            <div className="pb-4 border-b border-[#E9EBEF]">
-              <h1 className="text-2xl font-semibold tracking-tight text-[#17191C]">
-                Clinical AI Co-Pilot Console
-              </h1>
-              <p className="text-xs text-[#667085] mt-1">
-                Grounded multimodal reasoning, biomarker interpretation, and automated SBAR generation.
-              </p>
-            </div>
-
-            {selectedPatient ? (
-              <ClinicalCopilotView patient={selectedPatient} />
-            ) : (
-              <div className="p-8 border border-[#E9EBEF] rounded-lg bg-[#FFFFFF] text-center space-y-3">
-                <Sparkles className="h-8 w-8 text-[#386DF4] mx-auto" />
-                <h3 className="text-sm font-semibold text-[#17191C]">Select a Patient to Activate Co-Pilot</h3>
-                <p className="text-xs text-[#667085] max-w-sm mx-auto">
-                  The clinical co-pilot requires an active patient context to query longitudinal latent states and generate shift handovers.
-                </p>
-                <button
-                  onClick={() => setActiveNav("patients")}
-                  className="h-8 px-3.5 text-xs font-semibold text-white bg-[#386DF4] hover:bg-[#2F5ECC] rounded-md transition-colors shadow-xs"
-                >
-                  Select from Registry
-                </button>
-              </div>
-            )}
           </div>
         )}
       </div>

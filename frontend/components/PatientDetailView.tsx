@@ -14,7 +14,6 @@ import {
   User,
   Sliders,
   Download,
-  Bot,
   ExternalLink,
 } from "lucide-react";
 import { Patient, VisitCreate, Measurement } from "@/types/clinical";
@@ -23,7 +22,6 @@ import { SyntheticOmicsView } from "@/components/views/SyntheticOmicsView";
 import { TrajectoriesView } from "@/components/views/TrajectoriesView";
 import { TimelineNotesView } from "@/components/views/TimelineNotesView";
 import { DigitalTwinView } from "@/components/views/DigitalTwinView";
-import { ClinicalCopilotView } from "@/components/views/ClinicalCopilotView";
 import { CDSCardsView } from "@/components/CDSCardsView";
 import { AddVisitModal } from "@/components/AddVisitModal";
 import { ReportModal } from "@/components/ReportModal";
@@ -48,7 +46,7 @@ export function PatientDetailView({
   onSelectBiomarker,
 }: PatientDetailViewProps) {
   const [activeTab, setActiveTab] = useState<
-    "risk" | "synthetic_omics" | "digital_twin" | "trajectories" | "timeline" | "copilot"
+    "risk" | "synthetic_omics" | "digital_twin" | "trajectories" | "timeline"
   >("risk");
   const [isAddVisitOpen, setIsAddVisitOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -84,7 +82,6 @@ export function PatientDetailView({
     { id: "digital_twin", label: "Digital Twin Sandbox", icon: Sliders },
     { id: "trajectories", label: "Trajectories", icon: TrendingUp },
     { id: "timeline", label: "Encounters & Notes", icon: Calendar, count: visits.length },
-    { id: "copilot", label: "AI Co-Pilot", icon: Bot },
   ];
 
   return (
@@ -291,10 +288,6 @@ export function PatientDetailView({
             patient={patient}
             onOpenAddVisit={() => setIsAddVisitOpen(true)}
           />
-        )}
-
-        {activeTab === "copilot" && (
-          <ClinicalCopilotView patient={patient} />
         )}
       </div>
 
