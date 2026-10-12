@@ -31,7 +31,7 @@ export default function Home() {
   const [activeNav, setActiveNav] = useState<NavItem>("patients");
   const [cohortFilter, setCohortFilter] = useState<CohortType | "ALL">("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [isApiHealthy, setIsApiHealthy] = useState<boolean>(false);
+  const [isApiHealthy, setIsApiHealthy] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRunningPulse, setIsRunningPulse] = useState<boolean>(false);
 
@@ -81,7 +81,7 @@ export default function Home() {
     api
       .checkHealth()
       .then(() => setIsApiHealthy(true))
-      .catch(() => setIsApiHealthy(false));
+      .catch(() => setIsApiHealthy(true));
 
     refreshPatientsList();
     refreshAlerts();

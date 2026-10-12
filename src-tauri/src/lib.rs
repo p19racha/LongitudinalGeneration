@@ -133,10 +133,10 @@ fn start_backend_if_needed() {
                     *guard = Some(child);
                 }
                 println!("[Tauri] WSL backend process spawned. Waiting for port 8000...");
-                for attempt in 1..=30 {
-                    thread::sleep(Duration::from_millis(300));
+                for attempt in 1..=10 {
+                    thread::sleep(Duration::from_millis(250));
                     if is_port_open(8000) {
-                        println!("[Tauri] PULSE WSL backend is ready on port 8000 (after ~{} ms).", attempt * 300);
+                        println!("[Tauri] PULSE WSL backend is ready on port 8000 (after ~{} ms).", attempt * 250);
                         return;
                     }
                 }

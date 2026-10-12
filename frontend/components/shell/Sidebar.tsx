@@ -15,6 +15,8 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import { subscribeEngineMode, EngineMode } from "@/lib/api";
+
 export type NavItem = "overview" | "patients" | "analytics" | "alerts";
 
 interface SidebarProps {
@@ -40,6 +42,13 @@ export function Sidebar({
   onOpenBatchImport,
   onOpenAbout,
 }: SidebarProps) {
+  const [engineMode, setEngineMode] = React.useState<EngineMode>("embedded");
+
+  React.useEffect(() => {
+    return subscribeEngineMode((mode) => {
+      setEngineMode(mode);
+    });
+  }, []);
   const navItems: Array<{
     id: NavItem;
     label: string;
@@ -202,7 +211,13 @@ export function Sidebar({
           className={`flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] text-[#667085] ${
             collapsed ? "justify-center px-0" : ""
           }`}
-          title={isApiHealthy ? "PULSE Inference Engine: Online" : "PULSE Inference Engine: Offline"}
+          title={
+            isApiHealthy
+              ? engineMode === "live"
+                ? "PULSE PyTorch Engine: Connected on port 8000"
+                : "PULSE Embedded CDSS Engine: Active (Autonomous Offline SaMD)"
+              : "PULSE Engine: Disconnected"
+          }
         >
           <span
             className={`w-2 h-2 rounded-full shrink-0 ${
@@ -211,7 +226,11 @@ export function Sidebar({
           />
           {!collapsed && (
             <span className="truncate font-mono">
-              {isApiHealthy ? "PyTorch Engine Active" : "Engine Disconnected"}
+              {isApiHealthy
+                ? engineMode === "live"
+                  ? "PyTorch Engine :8000"
+                  : "Engine Active (Embedded CDSS)"
+                : "Engine Disconnected"}
             </span>
           )}
         </div>
